@@ -1,2 +1,2 @@
-# MLFCS
-Machine Learning for Finance and Complex Systems: Project
+# FinGPT-R1
+Project - Machine Learning for Finance and Complex Systems
