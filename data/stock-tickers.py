@@ -12,7 +12,7 @@ df_nasdaq = pd.DataFrame(si.tickers_nasdaq())
 df_dow = pd.DataFrame(si.tickers_dow())
 df_other = pd.DataFrame(si.tickers_other())
 
-""" Other tickers
+""" Other tickers sources
 tickers_ftse100
 tickers_ftse250
 tickers_ibovespa
@@ -28,8 +28,21 @@ set_other = set(symbol for symbol in df_other[0].values.tolist())
 
 
 # Union of all stock tickers
-stock_tickers = set.union(set_sp500, set_nasdaq, set_dow, set_other)
-stock_tickers.discard('')
+raw_stock_tickers = set.union(set_sp500, set_nasdaq, set_dow, set_other)
+raw_stock_tickers.discard('')
+
+# Clean stock tickers
+stock_tickers = set()
+remove = ['W', 'R', 'P', 'Q'] # Prefixes of some unwanted stock tickers
+
+for symbol in raw_stock_tickers:
+    if len(symbol) > 4 and symbol[-1] in remove:
+        continue
+    else:
+      stock_tickers.add(symbol)
+
+stock_tickers = {symbol for symbol in stock_tickers if not all(c == '-' for c in symbol)}
+stock_tickers = {symbol for symbol in stock_tickers if not (symbol[-1] == '$')}
 
 
 # Create dictionary {ticker: company_name}
