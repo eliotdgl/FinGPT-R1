@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 # Main stock tickers
-df_sp500 = pd.DataFrame(si.tickers_sp500()
+df_sp500 = pd.DataFrame(si.tickers_sp500())
 df_nasdaq = pd.DataFrame(si.tickers_nasdaq())
 df_dow = pd.DataFrame(si.tickers_dow())
 df_other = pd.DataFrame(si.tickers_other())
