@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer
 import re
 
-stock_tickers = {} # Import stock_tickers from /data/stock-tickers.py
+stock_tickers = {} # Import stock tickers from /data/stock-tickers.py
 
 def preprocess_stock_tickers(token: str) -> str:
   """
@@ -32,7 +32,7 @@ def reverse_preprocess_stock_ticker(token: str, space_marker: str = None) -> str
 
 def merge_space_marker(tokens: list[str], space_marker: str = None) -> list[str]:
   """
-    Merge tokenized stock tickers and tokenizer's space marker 
+    Merge tokenized stock tickers and tokenizer's space marker
   """
   merged_tokens = []
   for i, token in enumerate(tokens):
@@ -55,18 +55,23 @@ for symbol in list(stock_tickers):
 
 
 text = "The stock market saw significant movements today as AAPL and TSLA reported strong earnings. Meanwhile, BRK.B continued its steady rise, and ABR$D gained investor confidence. However, a surprise drop in GOOG left analysts puzzled. On the other hand, TEST and RANDOM were discussed but are not actual stock tickers."
-
+print(text)
 
 # Without stock tickers tokenizer
 tokens = tokenizer.tokenize(text)
-print('Initial:', tokens)
+print('\nInitial:', tokens)
 
 
 # With stock tickers tokenizer
 preprocessed_text = preprocess_stock_tickers(text)
 tokenizer.add_tokens(preprocessed_stock_tickers_list)
 tokens = tokenizer.tokenize(preprocessed_text)
-print('With stock tickers:', tokens)
+print('\nWith stock tickers:', tokens)
+
+
+# Tokenization + Embedding with stock tickers
+embeddings = tokenizer(preprocessed_text)
+print('\nEmbeddings:', embeddings)
 
 
 """
@@ -75,9 +80,9 @@ print('With stock tickers:', tokens)
 # Merge tokenizer's space marker and stock tickers
 space_marker = tokenizer.tokenize(" a")[0][0]
 merged_tokens = merge_space_marker(tokens, space_marker)
-print('Merged tokens:', merged_tokens)
+print('\nMerged tokens:', merged_tokens)
 
 
 # Deprocessing (remove stock tickers template <FinGPTICKER_>)
 deprocessed_tokens = [reverse_preprocess_stock_ticker(token, space_marker) for token in merged_tokens]
-print('Deprocessed:', deprocessed_tokens)
+print('\nDeprocessed:', deprocessed_tokens)
