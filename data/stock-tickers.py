@@ -43,6 +43,7 @@ for symbol in raw_stock_tickers:
 
 stock_tickers = {symbol for symbol in stock_tickers if not all(c == '-' for c in symbol)}
 stock_tickers = {symbol for symbol in stock_tickers if not (symbol[-1] == '$')}
+stock_tickers = {symbol for symbol in stock_tickers if len(symbol) >= 2} # So it does not consider start of sentence as tickers
 
 
 # Create dictionary {ticker: company_name}
