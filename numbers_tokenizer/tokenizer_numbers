@@ -1,0 +1,31 @@
+from transformers import AutoTokenizer
+import re
+
+def is_number(tokens : str) -> bool:
+  """
+    Check wether the token is a number
+  """    
+  return bool(re.fullmatch(r"-?\d+(\.\d+)?([ ]?\d+)?", tokens))
+
+def merge_space_numbers(tokens: list[str], space_marker: str = None) -> list[str]:
+  """
+    Merge tokenized numbers and tokenizer's space marker
+  """
+  merged_tokens = []
+  for i, token in enumerate(tokens):
+    if token == space_marker and i + 1 < len(tokens) and is_number(tokens[i+1]):
+      merged_tokens.append(space_marker + tokens[i+1])
+    else:
+      merged_tokens.append(token)
+
+  return merged_tokens
+
+base_model = 'deepseek-ai/DeepSeek-R1'
+tokenizer = AutoTokenizer.from_pretrained(base_model)
+
+text = "The stock market saw significant movements today as AAPL and TSLA reported strong earnings of 10068920 % OMG. Meanwhile, BRK.B continued its steady rise with a 0.78% rise , and ABR$D gained investor confidence. However, a surprise drop in GOOG left analysts puzzled (they lost 699648687). On the other hand, TEST and RANDOM were discussed but are not actual stock tickers."
+print(text)
+
+print(is_number("456"))
+print(is_number("55 788"))
+
