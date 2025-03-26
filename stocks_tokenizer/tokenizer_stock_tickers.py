@@ -2,19 +2,21 @@ from transformers import AutoTokenizer
 import re
 
 stock_tickers = {} # Import stock tickers from /data/stock-tickers.py
+stock_tickers_w_dollar = stock_tickers.union({'$'+symbol for symbol in stock_tickers})
 
 def preprocess_stock_tickers(token: str) -> str:
   """
     Identify stock tickers in text and convert them with special template
   """
-  regex_pattern = r'\b[A-Z]+(?:[\.|\$][A-Za-z0-9]+)*\b'
+  regex_pattern = r'\$?\b[A-Z]+(?:[\.|\$][A-Za-z0-9]+)*\b'
   potential_tickers = re.findall(regex_pattern, token)
-
-  valid_tickers = {ticker for ticker in potential_tickers if ticker in stock_tickers}
 
   def replace_ticker(match):
     ticker = match.group(0)
-    return f"<FinGPTICKER_{ticker}>" if ticker in valid_tickers else ticker
+    if ticker.startswith("$"):
+        ticker = ticker[1:]
+
+    return f"<FinGPTICKER_{ticker}>" if ticker in stock_tickers_w_dollar else ticker
 
   processed_text = re.sub(regex_pattern, replace_ticker, token)
 
@@ -54,7 +56,7 @@ for symbol in list(stock_tickers):
   preprocessed_stock_tickers_list.append(preprocess_stock_tickers(symbol))
 
 
-text = "The stock market saw significant movements today as AAPL and TSLA reported strong earnings. Meanwhile, BRK.B continued its steady rise, and ABR$D gained investor confidence. However, a surprise drop in GOOG left analysts puzzled. On the other hand, TEST and RANDOM were discussed but are not actual stock tickers."
+text = "The stock market saw significant movements today as AAPL and $TSLA reported strong earnings. Meanwhile, BRK.B continued its steady rise, and ABR$D gained investor confidence. However, a surprise drop in GOOG left analysts puzzled. On the other hand, TEST and RANDOM were discussed but are not actual stock tickers."
 print(text)
 
 # Without stock tickers tokenizer
