@@ -67,6 +67,10 @@ print('\nInitial:', tokens)
 # With stock tickers tokenizer
 preprocessed_text = preprocess_stock_tickers(text)
 tokenizer.add_tokens(preprocessed_stock_tickers_list)
+
+stock_indices = [] # i.e. S&P500, NASDAQ. Import from /data/stock-tickers.py
+tokenizer.add_tokens(stock_indices)
+
 tokens = tokenizer.tokenize(preprocessed_text)
 print('\nWith stock tickers:', tokens)
 
