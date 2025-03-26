@@ -46,6 +46,24 @@ stock_tickers = {symbol for symbol in stock_tickers if not (symbol[-1] == '$')}
 stock_tickers = {symbol for symbol in stock_tickers if len(symbol) >= 2} # So it does not consider start of sentence as tickers
 
 
+stock_indices = ["S&P 500", "S&P500", "Standard & Poor's 500",
+                 "Dow Jones Industrial Average", "DJIA", "Dow Jones", "The Dow",
+                 "Nasdaq", "NASDAQ",
+                 "FTSE 100", "FTSE100",
+                 "Nikkei 225", "Nikkei",
+                 "DAX",
+                 "CAC 40",
+                 "Hang Seng", "HSI",
+                 "ASX 200",
+                 "Bovespa", "Ibovespa",
+                 "Sensex", "BSE Sensex",
+                 "TSX",
+                 "KOSPI",
+                 "Russell 3000",
+                 "MSCI"
+]
+
+
 # Create dictionary {ticker: company_name}
 def get_company_name(ticker):
     try:
