@@ -4,6 +4,8 @@ import re
 stock_tickers = {} # Import stock tickers from /data/stock-tickers.py
 stock_tickers_w_dollar = stock_tickers.union({'$'+symbol for symbol in stock_tickers})
 
+tokenized_stock_indices = {} # Import stock indices from /data/stock-tickers.py
+
 def preprocess_stock_tickers(token: str) -> str:
   """
     Identify stock tickers in text and convert them with special template
@@ -66,9 +68,8 @@ print('\nInitial:', tokens)
 
 # With stock tickers tokenizer
 preprocessed_text = preprocess_stock_tickers(text)
-tokenizer.add_tokens(preprocessed_stock_tickers_list)
 
-stock_indices = [] # i.e. S&P500, NASDAQ. Import from /data/stock-tickers.py
+tokenizer.add_tokens(preprocessed_stock_tickers_list)
 tokenizer.add_tokens(stock_indices)
 
 tokens = tokenizer.tokenize(preprocessed_text)
