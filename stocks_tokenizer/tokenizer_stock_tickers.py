@@ -6,6 +6,20 @@ stock_tickers_w_dollar = stock_tickers.union({'$'+symbol for symbol in stock_tic
 
 tokenized_stock_indices = {} # Import stock indices from /data/stock-tickers.py
 
+def preprocess_stock_indices(text):
+  pattern = r'\$?\b(?:' + '|'.join(re.escape(variant) for variant in tokenized_stock_indices.keys()) + r')\b'
+    
+  def replace_with_token(match):
+    if match.group(0)[0] == '$':
+      return tokenized_stock_indices[match.group(0)[1:]]
+
+    return tokenized_stock_indices[match.group(0)]
+
+  preprocessed_text = re.sub(pattern, replace_with_token, text)
+
+  return preprocessed_text
+
+
 def preprocess_stock_tickers(token: str) -> str:
   """
     Identify stock tickers in text and convert them with special template
@@ -67,10 +81,11 @@ print('\nInitial:', tokens)
 
 
 # With stock tickers tokenizer
-preprocessed_text = preprocess_stock_tickers(text)
+preprocessed_text = preprocess_stock_indices(text)
+preprocessed_text = preprocess_stock_tickers(preprocessed_text)
 
 tokenizer.add_tokens(preprocessed_stock_tickers_list)
-tokenizer.add_tokens(stock_indices)
+tokenizer.add_tokens(list(tokenized_stock_indices.values()))
 
 tokens = tokenizer.tokenize(preprocessed_text)
 print('\nWith stock tickers:', tokens)
@@ -88,7 +103,6 @@ print('\nEmbeddings:', embeddings)
 space_marker = tokenizer.tokenize(" a")[0][0]
 merged_tokens = merge_space_marker(tokens, space_marker)
 print('\nMerged tokens:', merged_tokens)
-
 
 # Deprocessing (remove stock tickers template <FinGPTICKER_>)
 deprocessed_tokens = [reverse_preprocess_stock_ticker(token, space_marker) for token in merged_tokens]
