@@ -1,1 +1,11 @@
 numpy
+torch
+tqdm
+transformers
+re
+huggingface_hub
+yahoo_fin
+yfinance
+requests
+requests-html
+bs4
