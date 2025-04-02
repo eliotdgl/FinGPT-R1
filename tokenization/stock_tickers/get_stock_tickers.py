@@ -1,5 +1,8 @@
 !pip install requests-html yahoo_fin yfinance tqdm
 
+import os
+import json
+
 from yahoo_fin import stock_info as si
 import yfinance as yf
 import pandas as pd
@@ -44,6 +47,14 @@ for symbol in raw_stock_tickers:
 stock_tickers = {symbol for symbol in stock_tickers if not all(c == '-' for c in symbol)}
 stock_tickers = {symbol for symbol in stock_tickers if not (symbol[-1] == '$')}
 stock_tickers = {symbol for symbol in stock_tickers if len(symbol) >= 2} # So it does not consider start of sentence as tickers
+
+
+# Export stock tickers
+output_file = "data/vocabulary/stock_tickers.json"
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+with open(output_file, "w") as f:
+    json.dump(stock_tickers, f, indent=4)
 
 
 """
