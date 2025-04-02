@@ -13,4 +13,12 @@ minus_numbers_with_orders = ['-' + number_order for number_order in numbers_with
 minus_numbers_with_orders_currencies = ['-' + number_order_currency for number_order_currency in numbers_with_orders_currencies]
 minus_numbers_percentages = ['-' + number for number in numbers_percentages]
 
-new_vocab = numbers + neg_numbers + numbers_currencies + numbers_percentages + numbers_with_orders + numbers_with_orders_currencies + minus_numbers_with_orders + minus_numbers_with_orders_currencies + minus_numbers_percentages
+numericals_vocab = numbers + neg_numbers + numbers_currencies + numbers_percentages + numbers_with_orders + numbers_with_orders_currencies + minus_numbers_with_orders + minus_numbers_with_orders_currencies + minus_numbers_percentages
+
+
+# Export numericals
+output_file = "data/vocabulary/numericals.json"
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+with open(output_file, "w") as f:
+    json.dump(numericals_vocab, f, indent=4)
