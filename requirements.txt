@@ -9,3 +9,5 @@ yfinance
 requests
 requests-html
 bs4
+panda
+#hugging face datasests
