@@ -38,4 +38,4 @@ output_file = "data/vocabulary/stock_indices.json"
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 with open(output_file, "w") as f:
-    json.dump(stock_tickers, f, indent=4)
+    json.dump(tokenized_stock_indices, f, indent=4)
