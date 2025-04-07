@@ -43,6 +43,7 @@ stock_tickers = {symbol for symbol in stock_tickers if not all(c == '-' for c in
 stock_tickers = {symbol for symbol in stock_tickers if not (symbol[-1] == '$')}
 stock_tickers = {symbol for symbol in stock_tickers if len(symbol) >= 2} # So it does not consider start of sentence as tickers
 
+stock_tickers_with_template = {f"<FinGPTICKER_{ticker}>" for ticker in stock_tickers}
 
 # Export stock tickers
 import json
@@ -50,8 +51,12 @@ import os
 
 if __name__ == "__main__":
     os.makedirs("tokenization/vocabulary", exist_ok=True)
-    with open("tokenization/vocabulary/stock_tickers_vocab.json", "w") as f:
+    with open("tokenization/vocabulary/stock_tickers.json", "w") as f:
         json.dump(list(stock_tickers), f)
+
+    os.makedirs("tokenization/vocabulary", exist_ok=True)
+    with open("tokenization/vocabulary/stock_tickers_vocab.json", "w") as f:
+        json.dump(list(stock_tickers_with_template), f)
 
 
 """
