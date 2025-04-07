@@ -1,14 +1,12 @@
-pip install -r requirements.txt
-
 from huggingface_hub import login
-HF_TOKEN = ""
-login(HF_TOKEN)
-
+login("")
 
 import torch
 from torch import nn
 from tqdm import tqdm
 from transformers import LlamaTokenizer, LlamaForCausalLM
+
+from tokenization.preprocess_text import preprocess_text
 
 # Load Llama tokenizer and model
 tokenizer = LlamaTokenizer.from_pretrained("openlm-research/open_llama_3b")
@@ -18,11 +16,20 @@ old_vocab_len = len(tokenizer)
 
 
 # Import new tokens
-stock_tokens = [] # From our stocks tikers method
-num_tokens = [] # From our num method
+import json 
+    # Load stock indices vocabulary
+with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
+    stock_indices = list(json.load(f).values())
+    # Load stock tickers vocabulary
+with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
+    stock_tickers = json.load(f)
+    # Load numerical vocabulary
+with open("data/vocabulary/numericals_vocab.json", "r") as f:
+    num_tokens = json.load(f)
 
 # Add new tokens to the tokenizer
-tokenizer.add_tokens(stock_tokens)
+tokenizer.add_tokens(stock_indices)
+tokenizer.add_tokens(stock_tickers)
 tokenizer.add_tokens(num_tokens)
 
 new_vocab_len = len(tokenizer)
@@ -31,10 +38,6 @@ new_vocab_len = len(tokenizer)
 # List of indices of the new added tokens
 new_token_indices = list(range(old_vocab_len, new_vocab_len))
 new_token_indices_torch = torch.tensor(new_token_indices)
-
-
-print(f"Original vocab length: {old_vocab_len}")
-print(f"New vocab length: {new_vocab_len}")
 
 
 # Resize the model's embedding layer to accommodate the new added tokens
@@ -88,6 +91,7 @@ Custom_Embeddings = CustomEmbeddings(embedding_dim, model.get_input_embeddings()
 
 optimizer = torch.optim.AdamW(Custom_Embeddings.parameters(), lr=5e-5)
 
+dataloader = {} # Import data
 
 num_epochs = 3
 epoch_bar = tqdm(range(num_epochs))
@@ -97,7 +101,7 @@ Custom_Embeddings.train()
 for epoch in epoch_bar:
 
     epoch_loss = 0
-    for batch in ["<FinGPTICKER_AAPL> increased by +2%", "Amazon crisis"]:
+    for batch in dataloader:
         inputs = tokenizer(batch, return_tensors="pt")
         input_ids = inputs["input_ids"]
 
