@@ -10,6 +10,7 @@ lxml
 # Text and NLP
 regex
 transformers==4.50.3
+sentencepiece
 torch
 
 # Data saving/loading
