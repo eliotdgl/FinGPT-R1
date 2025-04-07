@@ -3,16 +3,13 @@ import re
 import json 
     # Load stock indices vocabulary
 with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
-    tokenized_stock_indices = list(json.load(f).values())
+    tokenized_stock_indices = json.load(f)
     # Load stock tickers vocabulary
 with open("tokenization/vocabulary/stock_tickers.json", "r") as f:
-    stock_tickers = json.load(f)
+    stock_tickers = list(json.load(f))
 
 
-stock_tickers_w_dollar = stock_tickers.union({'$'+symbol for symbol in stock_tickers})
-
-
-def preprocess_stock_indices(text):
+def preprocess_stock_indices(text: str)->str:
   pattern = r'\$?\b(?:' + '|'.join(re.escape(variant) for variant in tokenized_stock_indices.keys()) + r')\b'
     
   def replace_with_token(match):
@@ -37,12 +34,21 @@ def preprocess_stock_tickers(token: str) -> str:
     ticker = match.group(0)
     if ticker.startswith("$"):
         ticker = ticker[1:]
+        return f"<FinGPTICKER_{ticker}>" if ticker in stock_tickers else '$'+ticker
 
-    return f"<FinGPTICKER_{ticker}>" if ticker in stock_tickers_w_dollar else ticker
+    return f"<FinGPTICKER_{ticker}>" if ticker in stock_tickers else ticker
 
   processed_text = re.sub(regex_pattern, replace_ticker, token)
 
   return processed_text
+
+
+def preprocess_stocks(text: str)->str:
+   preprocessed_stocks_text = preprocess_stock_indices(text)
+   preprocessed_stocks_text = preprocess_stock_tickers(preprocessed_stocks_text)
+   return preprocessed_stocks_text
+
+
 
 
 

@@ -164,7 +164,7 @@ def replace_numbers(text):
   return ' '.join(new_words)
   
 
-def proccess_numbers(token :str,splited=False)-> str :
+def preproccess_numbers(token :str,splited=False)-> str :
     """
     Identify numbers in text,replace them with their numerical values and round them. 
     Then, if splited, return the preprocessed text, the numerical part and the qualitative part.
@@ -191,7 +191,7 @@ def proccess_numbers(token :str,splited=False)-> str :
       return result
     
         
-
+"""
 print("We can identify numbers:")
 print("Is 1234 a number ?", is_number("123"))
 print("Is 1.234 a number ?", is_number("1.23"))
@@ -206,4 +206,5 @@ print("We also change numbers written in words to their numeric representation:"
 print("test one->",str(replace_numbers("test one")))
 print("test twenty two->",str(replace_numbers("test twenty two")))
 print("test one hundred and half a thousand->",str(replace_numbers("test one hundred and half a thousand")))
-print(proccess_numbers("test 1234 and 1.234 and 1 234 and 1.234567 and 123456.7"))
+print(preproccess_numbers("test 1234 and 1.234 and 1 234 and 1.234567 and 123456.7"))
+"""
