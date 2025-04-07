@@ -1,3 +1,5 @@
+currencies = ["$", "€", "£", "¥", "CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
+
 int_hashtags = ['#' * t for t in range(1, 5)]
 dec_hashtags = ['#' * t1 + '.' + '#' * t2 for t1 in range(0, 6) for t2 in range(1, 2)]
 
@@ -17,8 +19,10 @@ numericals_vocab = numbers + neg_numbers + numbers_currencies + numbers_percenta
 
 
 # Export numericals
-output_file = "data/vocabulary/numericals.json"
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
+import json
+import os
 
-with open(output_file, "w") as f:
-    json.dump(numericals_vocab, f, indent=4)
+if __name__ == "__main__":
+    os.makedirs("tokenization/vocabulary", exist_ok=True)
+    with open("tokenization/vocabulary/numericals_vocab.json", "w") as f:
+        json.dump(numericals_vocab, f)
