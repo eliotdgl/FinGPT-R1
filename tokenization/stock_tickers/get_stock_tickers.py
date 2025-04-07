@@ -1,6 +1,3 @@
-import os
-import json
-
 from yahoo_fin import stock_info as si
 import yfinance as yf
 import pandas as pd
@@ -48,11 +45,13 @@ stock_tickers = {symbol for symbol in stock_tickers if len(symbol) >= 2} # So it
 
 
 # Export stock tickers
-output_file = "data/vocabulary/stock_tickers.json"
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
+import json
+import os
 
-with open(output_file, "w") as f:
-    json.dump(stock_tickers, f, indent=4)
+if __name__ == "__main__":
+    os.makedirs("tokenization/vocabulary", exist_ok=True)
+    with open("tokenization/vocabulary/stock_tickers_vocab.json", "w") as f:
+        json.dump(list(stock_tickers), f)
 
 
 """

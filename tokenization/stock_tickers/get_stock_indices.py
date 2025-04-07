@@ -1,6 +1,3 @@
-import os
-import json
-
 tokenized_stock_indices = {
     "S&P 500": "<FinGPTICKER_S&P500>",
     "S&P500": "<FinGPTICKER_S&P500>",
@@ -33,9 +30,12 @@ tokenized_stock_indices = {
     "MSCI": "<FinGPTICKER_MSCI>"
 }
 
-# Export stock indices
-output_file = "data/vocabulary/stock_indices.json"
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-with open(output_file, "w") as f:
-    json.dump(tokenized_stock_indices, f, indent=4)
+# Export stock indices
+import json
+import os
+
+if __name__ == "__main__":
+    os.makedirs("tokenization/vocabulary", exist_ok=True)
+    with open("tokenization/vocabulary/stock_indices_vocab.json", "w") as f:
+        json.dump(tokenized_stock_indices, f)
