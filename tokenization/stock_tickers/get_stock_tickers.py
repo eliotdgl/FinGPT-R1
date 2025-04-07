@@ -1,5 +1,3 @@
-!pip install requests-html yahoo_fin yfinance tqdm
-
 import os
 import json
 

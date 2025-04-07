@@ -9,3 +9,5 @@ from datasets import load_dataset
 # Load the dataset
 data_FNSPID = load_dataset("Zihan1004/FNSPID")
 data_FNSPID=data_FNSPID.with_format("pandas")
+
+print(data_FNSPID.head())

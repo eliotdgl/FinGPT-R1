@@ -1,13 +1,22 @@
+# Core dependencies
+pandas
 numpy
-torch
-tqdm
-transformers
-re
-huggingface_hub
-yahoo_fin
-yfinance
 requests
 requests-html
+beautifulsoup4
 bs4
-panda
-#hugging face datasests
+lxml
+
+# Text and NLP
+regex
+transformers
+torch
+
+# Data saving/loading
+tqdm
+jsonlines
+
+# APIs and web data
+yfinance
+yahoo_fin
+huggingface_hub

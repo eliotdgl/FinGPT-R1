@@ -1,3 +1,5 @@
+pip install -r requirements.txt
+
 from huggingface_hub import login
 HF_TOKEN = ""
 login(HF_TOKEN)

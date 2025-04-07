@@ -4,8 +4,6 @@
     They seem to block automatic scrapping using simple requests. May have to use Selenium to simulate a website user
 """
 
-!pip install requests bs4
-
 from bs4 import BeautifulSoup as BS
 import requests as req
 
