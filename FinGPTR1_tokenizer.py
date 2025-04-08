@@ -24,13 +24,17 @@ with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
 with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
     stock_tickers = json.load(f)
     # Load numerical vocabulary
-with open("data/vocabulary/numericals_vocab.json", "r") as f:
+with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
     num_tokens = json.load(f)
+    # Load financial vocabulary
+with open("data/vocabulary/financial_vocab.json", "r") as f:
+    financial_tokens = json.load(f)
 
 # Add new tokens to the tokenizer
 tokenizer.add_tokens(stock_indices)
 tokenizer.add_tokens(stock_tickers)
 tokenizer.add_tokens(num_tokens)
+tokenizer.add_tokens(financial_tokens)
 
 new_vocab_len = len(tokenizer)
 
@@ -91,7 +95,10 @@ Custom_Embeddings = CustomEmbeddings(embedding_dim, model.get_input_embeddings()
 
 optimizer = torch.optim.AdamW(Custom_Embeddings.parameters(), lr=5e-5)
 
-dataloader = {} # Import data
+from data.financial_news.NIFTY import get_data
+data = get_data()
+train_data = data["train"].to_pandas()
+news, labels = train_data["news"], train_data["label"]
 
 num_epochs = 3
 epoch_bar = tqdm(range(num_epochs))

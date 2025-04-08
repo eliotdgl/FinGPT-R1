@@ -1,9 +1,9 @@
 """
 We get data from NIFTY, a dataset of financial news 
-
 """
 from datasets import load_dataset
 
 # Load the dataset
-data_NIFTY = load_dataset("raeidsaqur/nifty")
-data_NIFTY=data_NIFTY.with_format("pandas")
+def get_data():
+    data_NIFTY = load_dataset("raeidsaqur/nifty")
+    return data_NIFTY
