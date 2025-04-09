@@ -1,4 +1,4 @@
-currencies = ["$", "€", "£", "¥", "CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
+currencies = ["$", "€", "£", "¥"] # "CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"
 
 int_hashtags = ['#' * t for t in range(1, 5)]
 dec_hashtags = ['#' * t1 + '.' + '#' * t2 for t1 in range(0, 6) for t2 in range(1, 2)]

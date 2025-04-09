@@ -6,13 +6,13 @@ def is_number(tokens : str) -> bool:
   """    
   return bool(re.fullmatch(r"-?\d+(\.\d+)?([ ]?\d+)?", tokens))
 
-def round_number(tokens : str) -> str:
+def round_number(tokens : str, precision =0) -> str:
   """
-    Round the number keeping only the first half of the digits
-    Can change precision to change the acceptable length
+    Round the number keeping only a given number of digits
+    By default, keeps the first half of the digits
   """
-  precision = len(tokens) // 2 +1
-
+  if precision ==0:
+    precision = len(tokens) // 2 +1
   if bool(re.search(r"\.", tokens)):
     precision-=1
     [integ, decim] = tokens.split('.', 1) if '.' in tokens else [tokens, ""]
