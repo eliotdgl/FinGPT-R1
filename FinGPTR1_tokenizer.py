@@ -56,26 +56,21 @@ for param in model.parameters():
 embedding_layer = model.get_input_embeddings()
 
 
-# Define an MLP for personalized embeddings of the new added tokens
-class EmbeddingMLP(nn.Module):
-    def __init__(self, embedding_dim: int):
-        super(EmbeddingMLP, self).__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(embedding_dim, embedding_dim * 2),
-            nn.Linear(embedding_dim * 2, embedding_dim)
-        )
-
-    def forward(self, x):
-        return self.mlp(x)
-
-
 # Define a custom embedding module combining original model's embeddings and personalized embeddings from EmbeddingMLP()
 class CustomEmbeddings(nn.Module):
     def __init__(self, embedding_dim: int, original_embeddings: torch, new_token_indices: torch):
         super(CustomEmbeddings, self).__init__()
         self.new_token_indices = new_token_indices
         self.original_embeddings = original_embeddings
-        self.mlp = EmbeddingMLP(embedding_dim)
+        self.new_embeddings_layer = nn.Embedding(
+            num_embeddings=len(new_token_indices),
+            embedding_dim=original_embeddings.embedding_dim
+        )
+        # Randomly initialize new embeddings using original embeddings
+        with torch.no_grad():
+            mean = self.original_embeddings.weight.mean(dim=0)
+            std = self.original_embeddings.weight.std(dim=0)
+            self.new_embeddings_layer.weight.data.normal_(mean=mean, std=std)
 
     def forward(self, input_ids: torch):
         with torch.no_grad():
@@ -83,7 +78,8 @@ class CustomEmbeddings(nn.Module):
             # Create a mask for the new added tokens
             masked_embeddings = torch.isin(input_ids, self.new_token_indices)
         # Modify the embeddings for the new added tokens only using the MLP
-        embeddings[masked_embeddings] = self.mlp(embeddings[masked_embeddings])
+        new_input_ids = input_ids[masked_embeddings] - self.new_token_indices[0]
+        embeddings[masked_embeddings] = self.new_embeddings_layer(new_input_ids)
 
         return embeddings
 
@@ -92,7 +88,7 @@ embedding_dim = model.get_input_embeddings().embedding_dim
 
 Custom_Embeddings = CustomEmbeddings(embedding_dim, model.get_input_embeddings(), new_token_indices_torch)
 
-optimizer = torch.optim.AdamW(Custom_Embeddings.parameters(), lr=5e-5)
+optimizer = torch.optim.AdamW(Custom_Embeddings.new_embeddings_layer.parameters(), lr=5e-5)
 
 from data.financial_news.NIFTY import get_data
 data = get_data()
