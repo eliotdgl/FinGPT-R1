@@ -58,7 +58,7 @@ embedding_layer = model.get_input_embeddings()
 
 # Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
-    def __init__(self, original_embeddings: torch, old_vocab_len: int, new_token_indices: torch):
+    def __init__(self, original_embeddings: torch, new_token_indices: torch):
         super(CustomEmbeddings, self).__init__()
         self.new_token_indices = new_token_indices
         self.original_embeddings = original_embeddings
@@ -68,32 +68,35 @@ class CustomEmbeddings(nn.Module):
             num_embeddings=len(new_token_indices),
             embedding_dim=original_embeddings.embedding_dim
         )
-        # Randomly initialize new embeddings using original embeddings
+        # Randomly initialize new embeddings according to original embeddings
         with torch.no_grad():
             mean = self.original_embeddings.weight[:self.old_vocab_len].mean(dim=0)
             std = self.original_embeddings.weight[:self.old_vocab_len].std(dim=0)
-            self.new_embeddings_layer.weight.data.normal_(mean=mean, std=std)
+            self.new_embeddings_layer.weight.data = torch.normal(mean=mean, std=std)
 
     def forward(self, input_ids: torch):
         with torch.no_grad():
-            embeddings = self.original_embeddings(input_ids)
-            # Create a mask for the new added tokens
-            masked_embeddings = torch.isin(input_ids, self.new_token_indices)
-        # Modify the embeddings for the new added tokens only using the MLP
-        new_input_ids = input_ids[masked_embeddings] - self.new_token_indices[0]
-        embeddings[masked_embeddings] = self.new_embeddings_layer(new_input_ids)
+            embeddings = self.original_embeddings(input_ids).clone()
+        # Create a mask for the new added tokens
+        masked_embeddings = torch.isin(input_ids, self.new_token_indices)
+        # Modify the embeddings for the new added tokens only
+        if masked_embeddings.any():
+            new_input_ids = input_ids[masked_embeddings] - self.new_token_indices[0]
+            embeddings[masked_embeddings] = self.new_embeddings_layer(new_input_ids)
 
         return embeddings
 
 
-Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, new_token_indices_torch)
-
+Custom_Embeddings = CustomEmbeddings(embedding_layer, new_token_indices_torch)
 optimizer = torch.optim.AdamW(Custom_Embeddings.new_embeddings_layer.parameters(), lr=5e-5)
+
 
 from data.financial_news.NIFTY import get_data
 data = get_data()
 train_data = data["train"].to_pandas()
 news, labels = train_data["news"], train_data["label"]
+
+dataloader = {}
 
 num_epochs = 3
 epoch_bar = tqdm(range(num_epochs))
@@ -108,7 +111,7 @@ for epoch in epoch_bar:
         input_ids = inputs["input_ids"]
 
         optimizer.zero_grad()
-        # Get the combined embeddings (original|new_added_tokens) for the tokens in the batch
+        # Get the personalized embeddings (original|new_added_tokens) for the tokens in the batch
         embeddings = Custom_Embeddings(input_ids)
         output = model(inputs_embeds=embeddings, labels=input_ids)
         loss = output.loss
@@ -119,14 +122,9 @@ for epoch in epoch_bar:
     print(f"Epoch {epoch} loss: {epoch_loss}")
 
 
-Custom_Embeddings.eval()
 with torch.no_grad():
-    # Generate new embeddings including trained embeddingsfor the new added tokens
-    new_embeddings = Custom_Embeddings(new_token_indices_torch)
-
-# Update the model's embedding layer
-embedding_layer = model.get_input_embeddings()
-embedding_layer.weight[old_vocab_len:] = new_embeddings.detach()
+    # Update the model's embedding layer
+    embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
 
 # Save the personalized tokenizer
 Path = ""
