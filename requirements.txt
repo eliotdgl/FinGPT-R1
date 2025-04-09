@@ -16,6 +16,7 @@ torch
 # Data saving/loading
 tqdm
 jsonlines
+datasets
 
 # APIs and web data
 yfinance
