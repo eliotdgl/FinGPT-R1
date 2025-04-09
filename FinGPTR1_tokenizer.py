@@ -62,7 +62,6 @@ class EmbeddingMLP(nn.Module):
         super(EmbeddingMLP, self).__init__()
         self.mlp = nn.Sequential(
             nn.Linear(embedding_dim, embedding_dim * 2),
-            nn.ReLU(),
             nn.Linear(embedding_dim * 2, embedding_dim)
         )
 
