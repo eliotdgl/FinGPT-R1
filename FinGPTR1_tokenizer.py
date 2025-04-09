@@ -84,8 +84,6 @@ class CustomEmbeddings(nn.Module):
         return embeddings
 
 
-embedding_dim = model.get_input_embeddings().embedding_dim
-
 Custom_Embeddings = CustomEmbeddings(embedding_dim, model.get_input_embeddings(), new_token_indices_torch)
 
 optimizer = torch.optim.AdamW(Custom_Embeddings.new_embeddings_layer.parameters(), lr=5e-5)
