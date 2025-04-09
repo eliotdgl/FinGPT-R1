@@ -56,7 +56,7 @@ for param in model.parameters():
 embedding_layer = model.get_input_embeddings()
 
 
-# Define a custom embedding module combining original model's embeddings and personalized embeddings from EmbeddingMLP()
+# Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
     def __init__(self, embedding_dim: int, original_embeddings: torch, new_token_indices: torch):
         super(CustomEmbeddings, self).__init__()
