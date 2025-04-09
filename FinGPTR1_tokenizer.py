@@ -58,18 +58,20 @@ embedding_layer = model.get_input_embeddings()
 
 # Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
-    def __init__(self, original_embeddings: torch, new_token_indices: torch):
+    def __init__(self, original_embeddings: torch, old_vocab_len: int, new_token_indices: torch):
         super(CustomEmbeddings, self).__init__()
         self.new_token_indices = new_token_indices
         self.original_embeddings = original_embeddings
+        self.old_vocab_len = new_token_indices[0].item()
+        
         self.new_embeddings_layer = nn.Embedding(
             num_embeddings=len(new_token_indices),
             embedding_dim=original_embeddings.embedding_dim
         )
         # Randomly initialize new embeddings using original embeddings
         with torch.no_grad():
-            mean = self.original_embeddings.weight.mean(dim=0)
-            std = self.original_embeddings.weight.std(dim=0)
+            mean = self.original_embeddings.weight[:self.old_vocab_len].mean(dim=0)
+            std = self.original_embeddings.weight[:self.old_vocab_len].std(dim=0)
             self.new_embeddings_layer.weight.data.normal_(mean=mean, std=std)
 
     def forward(self, input_ids: torch):
@@ -84,7 +86,7 @@ class CustomEmbeddings(nn.Module):
         return embeddings
 
 
-Custom_Embeddings = CustomEmbeddings(model.get_input_embeddings(), new_token_indices_torch)
+Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, new_token_indices_torch)
 
 optimizer = torch.optim.AdamW(Custom_Embeddings.new_embeddings_layer.parameters(), lr=5e-5)
 
