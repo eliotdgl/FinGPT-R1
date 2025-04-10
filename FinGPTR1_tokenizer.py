@@ -107,7 +107,8 @@ for epoch in epoch_bar:
 
     epoch_loss = 0
     for batch in dataloader:
-        inputs = tokenizer(batch, return_tensors="pt")
+        preprocessed_batch = preprocess_text(batch)
+        inputs = tokenizer(preprocessed_batch, return_tensors="pt")
         input_ids = inputs["input_ids"]
 
         optimizer.zero_grad()
