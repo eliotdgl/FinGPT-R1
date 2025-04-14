@@ -1,21 +1,18 @@
-currencies = ["$", "€", "£", "¥"] # "CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"
+currencies = ["$", "€", "£", "¥"] #"CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
 
-int_hashtags = ['#' * t for t in range(1, 5)]
-dec_hashtags = ['#' * t1 + '.' + '#' * t2 for t1 in range(0, 6) for t2 in range(1, 2)]
+int_hashtags = ['#' * t for t in range(1, 4)]
+dec_hashtags = [str(t1) + '.' + '#' * t2 for t1 in range(0, 3) for t2 in range(1, 3)] + [str(t1) + '.' + '#' for t1 in range(3, 5)]
 
-numbers = [str(i) + hashtags for i in range(1,10) for hashtags in (int_hashtags + dec_hashtags)]
-neg_numbers = ['-' + number for number in numbers]
-numbers_currencies = [currency + number for currency in currencies for number in numbers]
-numbers_percentages = [number + '%' for number in numbers]
+pos_hashtags = int_hashtags + dec_hashtags
+numbers_add_currencies = [currency + number for currency in currencies for number in pos_hashtags]
+pos_numbers = pos_hashtags + numbers_add_currencies
 
-numbers_with_orders = [number + order for number in numbers for order in ['', 'K', 'M', 'B', 'T']]
-numbers_with_orders_currencies = [currency + number_order for currency in currencies for number_order in numbers_with_orders]
+numbers_add_percentages = [number + '%' for number in pos_hashtags]
+numbers_add_orders = [number + order for number in pos_numbers for order in ['K', 'M', 'B', 'T']]
 
-minus_numbers_with_orders = ['-' + number_order for number_order in numbers_with_orders]
-minus_numbers_with_orders_currencies = ['-' + number_order_currency for number_order_currency in numbers_with_orders_currencies]
-minus_numbers_percentages = ['-' + number for number in numbers_percentages]
+numbers_add_neg = ['-' + number for number in (numbers_add_percentages+numbers_add_orders+pos_numbers)]
 
-numericals_vocab = numbers + neg_numbers + numbers_currencies + numbers_percentages + numbers_with_orders + numbers_with_orders_currencies + minus_numbers_with_orders + minus_numbers_with_orders_currencies + minus_numbers_percentages
+numericals_vocab = pos_numbers + numbers_add_percentages + numbers_add_orders + numbers_add_neg
 
 
 # Export numericals
