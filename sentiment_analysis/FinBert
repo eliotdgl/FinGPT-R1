@@ -3,7 +3,9 @@ from transformers import pipeline
 
 # Load tokenizer and model
 model_name = "yiyanghkust/finbert-tone"
+#Next step : use our own tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+#Further step : use our own RL based model
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 # Create sentiment analysis pipeline WE CAN USE IT WE OUR OWN !!
