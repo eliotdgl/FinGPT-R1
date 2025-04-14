@@ -1,111 +1,266 @@
 import re
-from numbers_to_vocab import match_number_to_vocab
-from words_to_num import replace_numbers
+
+class Numbers_preprocessor:
+  def __init__(self):
+    """
+      Initialize the class with regex patterns for different text formats
+    """
+    self.number_pattern = re.compile(r"\s([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?((?:K|M|B|T|million|billion|trillion)))?(\.?)\s")
+
+    self.currencies = ["$", "€", "£", "¥"] #"CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
+    self.regex_currencies = r"(?:\$|\€|\£|\¥)" #|CHF|CAD|AUD|NZD|CNY|\₹|\₽|R\$|RZAR|MXN|SGD|HKD|SEK|NOK|\₩|\₺)"
+
+    # Currency-related patterns
+    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?((?:K|M|B|T|million|billion|trillion)))?")
+    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?((?:K|M|B|T|million|billion|trillion)))?\s?(" + self.regex_currencies + ")")
+
+    # Percentage-related patterns
+    self.before_percentage_pattern = re.compile(r"([+-]?)((?:percent|%))\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)")
+    self.after_percentage_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)\s?((?:percent|%))")
+
+    # Master pattern combining all patterns
+    self.master_pattern = re.compile(
+            rf"(?P<number>{self.number_pattern.pattern})|"
+            rf"(?P<currency_before>{self.before_currency_pattern.pattern})|"
+            rf"(?P<currency_after>{self.after_currency_pattern.pattern})|"
+            rf"(?P<percent_before>{self.before_percentage_pattern.pattern})|"
+            rf"(?P<percent_after>{self.after_percentage_pattern.pattern})"
+        )
+
+    self.numericals_dict = {}
+    self.number_id = 0
 
 
-def is_number(tokens : str) -> bool:
-  """
-    Check wether the token is a number
-  """    
-  pattern = r"^[$\€\£\¥]?-?\d+(\.\d+)?([ ]?\d+)?%?$"
-  return bool(re.fullmatch(pattern, tokens))
+  def _number_format(self, number: str)->str:
+    """
+      Format a number into a compact form (#, K, M, B, T)
+    """
+    first_digit = number[0]
+    if '.' in number:
+      int_part, dec_part = number.split('.', 1)
+      if len(int_part) == 1 and first_digit in ['0', '1', '2']:
+        int_pattern = first_digit
+        dec_parttern = '#' * min(len(dec_part),2)
+      elif len(int_part) == 1 and first_digit in ['3', '4']:
+        int_pattern = first_digit
+        dec_parttern = '#'
+      else:
+        int_pattern = '#' * len(int_part)
+        dec_parttern = None
 
-def is_percentage(tokens : str) -> bool:
-  return bool('%'in tokens)
-
-def is_currency_amount(tokens : str) -> bool:
-   return bool('$' in tokens or '€' in tokens or '£' in tokens or '¥' in tokens)
-
-def round_number(tokens : str, precision =5) -> str:
-  """
-    Round the number keeping only a given number of digits
-    By default, keeps the first half of the digits
-    and replaces the rest by #.
-    Use it for percentage.
-  """
-  if precision ==0:
-    precision = len(tokens) // 2 +1
-  if len(tokens) >=8:
-      tokens = tokens[:8]
-  if bool(re.search(r"\.", tokens)):
-    precision-=1
-    [integ, decim] = tokens.split('.', 1) if '.' in tokens else [tokens, ""]
-    if len(integ) >= precision:
-      result = integ[:precision] + ("#" * (len(integ) - precision))
-    elif len(integ) + len(decim) >= precision:
-      result = integ + "." + decim[:precision - len(integ)]
-    else:
-      result = tokens
-  else:
-    result = tokens[:precision] + ("#" * (len(tokens) - precision))
-  return result
-
-def merge_numbers(text):
-    tokens = text.split()
-    result = []
-    buffer = []
-    
-    for token in tokens:
-        if token.isdigit():
-            buffer.append(token)
+      if int_part[-3:] == '000' and int_part[-6:] != '000000' and len(int_part[:-3]) in [1,2,3]:
+        int_pattern = int_pattern[:-3]
+        if dec_parttern is not None:
+          return f"{int_pattern}.{dec_parttern}", 'K'
         else:
-            if buffer:
-                result.append(''.join(buffer))
-                buffer = []
-            result.append(token)
-    
-    if buffer:
-        result.append(''.join(buffer))
-    
-    return ' '.join(result)
+          return f"{int_pattern}", 'K'
+      elif int_part[-6:] == '000000' and int_part[-9:] != '000000' and len(int_part[:-6]) in [1,2,3]:
+        int_pattern = int_pattern[:-6]
+        if dec_parttern is not None:
+          return f"{int_pattern}.{dec_parttern}", 'M'
+        else:
+          return f"{int_pattern}", 'M'
+      elif int_part[-9:] == '000000000' and int_part[-12:] != '000000000' and len(int_part[:-9]) in [1,2,3]:
+        int_pattern = int_pattern[:-9]
+        if dec_parttern is not None:
+          return f"{int_pattern}.{dec_parttern}", 'B'
+        else:
+          return f"{int_pattern}", 'B'
+      elif int_part[-12:] == '000000000000' and len(int_part[:-12]) in [1,2,3]:
+        int_pattern = int_pattern[:-12]
+        if dec_parttern is not None:
+          return f"{int_pattern}.{dec_parttern}", 'T'
+        else:
+          return f"{int_pattern}", 'T'
+      elif dec_parttern is not None:
+        return f"{int_pattern}.{dec_parttern}", None
+      else:
+        return f"{int_pattern}", None
 
-  
-
-def preproccess_numbers(token :str,splited=False)-> str :
-    """
-    Identify numbers in text,replace them with their numerical values and round them. 
-    Then, if splited, return the preprocessed text, the numerical part and the qualitative part.
-    Otherwise, return the preprocessed text.
-
-    """
-    temp=str(replace_numbers(token))
-    print(temp)
-    temp = merge_numbers(temp)
-    result=''
-    numericals=''
-    qualitatives=''
-    for word in temp.split():
-        if is_number(word):
-            if is_percentage(word):
-              word2 = round_number(word)
-            else:
-               word2 = match_number_to_vocab(word)
-            numericals+=word2+' '  
-            
-        else :
-          qualitatives+=word+' '
-          word2=word
-        result+=word2+' '
-    if splited:
-      return [result, numericals, qualitatives]
     else:
-      return result
-    
-        
-"""
-print("We can identify numbers:")
-print("Is 1234 a number ?", is_number("123"))
-print("Is 1.234 a number ?", is_number("1.23"))
-print("Is 1 234 a number ?", is_number("1 234"))
-print("Is number a number ?", is_number("number"))
-print("We round up the length of numbers so our tokenizer can handle them:")
-print("Rounded 1234 to", round_number("1234"))
-print("Rounded 1.234 to", round_number("1.234"))
-print("Rounded 123456.7", round_number("123456.7"))
-print("Rounded 1.234567", round_number("1.234567"))
-print("We also change numbers written in words to their numeric representation:")
-print("test one->",str(replace_numbers("test one")))
-print("test twenty two->",str(replace_numbers("test twenty two")))
-print("test one hundred and half a thousand->",str(replace_numbers("test one hundred and half a thousand")))
-print(preproccess_numbers("test 1234 and 1.234 and 1 234 and 1.234567 and 123456.7"))
-"""
+      if number[-3:] == '000' and number[-6:] != '000000' and len(number[:-3]) in [1,2,3]:
+        number = number[:-3]
+        return '#' * len(number), 'K'
+      elif number[-6:] == '000000' and number[-9:] != '000000' and len(number[:-6]) in [1,2,3]:
+        number = number[:-6]
+        return '#' * len(number), 'M'
+      elif number[-9:] == '000000000' and number[-12:] != '000000000' and len(number[:-9]) in [1,2,3]:
+        number = number[:-9]
+        return '#' * len(number), 'B'
+      elif number[-12:] == '000000000000' and len(number[:-12]) in [1,2,3]:
+        number = number[:-12]
+        return '#' * len(number), 'T'
+
+      return '#' * len(number), None
+
+
+  def _number_convert(self, match: re.Match)->str:
+    """
+      Convert a matched number (with optional sign) into its formatted version
+    """
+    sign, number, order, dot = match.groups()
+    number = number.replace(",", "")
+    formatted_number, order_from_zeros = self._number_format(number)
+
+    if sign is None or sign == '+':
+      sign = ""
+    elif sign == "-":
+      sign = "-"
+
+    if order is None:
+      if order_from_zeros is not None:
+        order = order_from_zeros
+      else:
+        order = ""
+
+    if dot is None:
+      dot = " "
+
+    result = f"{sign}{formatted_number}{order}{dot}"
+    self.update_numericals_dict(result, number, sign, order, "")
+
+    return ' ' + result + ' '
+
+  def _before_currency_convert(self, match: re.Match)->str:
+    """
+      Convert a currency amount with the currency symbol before the number into formatted text
+    """
+    sign, currency, number, order = match.groups()
+    number = number.replace(",", "")
+    formatted_number, order_from_zeros = self._number_format(number)
+    if sign is None or sign == '+':
+      sign = ""
+    elif sign == "-":
+      sign = "-"
+
+    if order is None:
+      if order_from_zeros is not None:
+        order = order_from_zeros
+      else:
+        order = ""
+    elif order == "million":
+      order = "M"
+    elif order == "billion":
+      order = "B"
+    elif order == "trillion":
+      order = "T"
+
+    result = f"{sign}{currency}{formatted_number}{order}"
+    self.update_numericals_dict(result, number, sign, order, currency)
+
+    return result
+
+  def _after_currency_convert(self, match: re.Match)->str:
+    """
+      Convert a currency amount with the currency symbol after the number into formatted text
+    """
+    sign, number, order, currency = match.groups()
+    number = number.replace(",", "")
+    formatted_number, order_from_zeros = self._number_format(number)
+
+    if sign is None or sign == '+':
+      sign = ""
+    elif sign == "-":
+      sign = "-"
+
+    if order is None:
+      if order_from_zeros is not None:
+        order = order_from_zeros
+      else:
+        order = ""
+    elif order == "million":
+      order = "M"
+    elif order == "billion":
+      order = "B"
+    elif order == "trillion":
+      order = "T"
+
+    result = f"{sign}{currency}{formatted_number}{order}"
+    self.update_numericals_dict(result, number, sign, order, currency)
+
+    return result
+
+  def _before_percentage_convert(self, match: re.Match)->str:
+    """
+      Convert a percentage value with the percentage symbol before the number into formatted text
+    """
+    sign, percent, number = match.groups()
+    number = number.replace(",", "")
+    formatted_number, _ = self._number_format(number)
+
+    if sign is None or sign == '+':
+      sign = ""
+    elif sign == "-":
+      sign = "-"
+
+    result = f"{sign}{formatted_number}%"
+    self.update_numericals_dict(result, number, sign, "", percent)
+
+    return result
+
+  def _after_percentage_convert(self, match: re.Match)->str:
+    """
+      Convert a percentage value with the percentage symbol after the number into formatted text
+    """
+    sign, number, percent = match.groups()
+    number = number.replace(",", "")
+    formatted_number, _ = self._number_format(number)
+
+    if sign is None or sign == '+':
+      sign = ""
+    elif sign == "-":
+      sign = "-"
+
+    result = f"{sign}{formatted_number}%"
+    self.update_numericals_dict(result, number, sign, "", percent)
+
+    return result
+
+
+  def update_numericals_dict(self, template, value, sign, order, unit):
+    self.numericals_dict[self.number_id] = {
+        "template": template,
+        "value": value,
+        "sign": sign,
+        "order": order,
+        "unit": unit
+    }
+    self.number_id += 1
+    pass
+
+  def preprocess_text(self, text: str)->str:
+    """
+      Preprocess the input text by applying all formatting rules to numbers, currencies, and percentages
+    """
+    self.numericals_dict = {}
+    self.number_id = 0
+
+    output_text = ""
+    last_end = 0
+
+    for match in self.master_pattern.finditer(text):
+      start, end = match.span()
+      output_text += text[last_end:start]
+      last_end = end
+
+      matched_text = match.group()
+
+      if match.lastgroup == 'number':
+        submatch = self.number_pattern.match(matched_text)
+        output_text += self._number_convert(submatch)
+      elif match.lastgroup == 'currency_before':
+        submatch = self.before_currency_pattern.match(matched_text)
+        output_text += self._before_currency_convert(submatch)
+      elif match.lastgroup == 'currency_after':
+        submatch = self.after_currency_pattern.match(matched_text)
+        output_text += self._after_currency_convert(submatch)
+      elif match.lastgroup == 'percent_before':
+        submatch = self.before_percentage_pattern.match(matched_text)
+        output_text += self._before_percentage_convert(submatch)
+      elif match.lastgroup == 'percent_after':
+        submatch = self.after_percentage_pattern.match(matched_text)
+        output_text += self._after_percentage_convert(submatch)
+
+    output_text += text[last_end:]
+
+    return output_text, self.numericals_dict
