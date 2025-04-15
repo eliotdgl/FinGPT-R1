@@ -30,6 +30,23 @@ class Numbers_preprocessor:
     self.numericals_dict = {}
     self.number_id = 0
 
+    self.order_to_int = {
+      "": 0,
+      "K": 3,
+      "M": 6,
+      "B": 9,
+      "T": 12,
+    }
+
+    self.unit_to_int = {
+      "": 0,
+      "$": 1,
+      "£": 2,
+      "€": 3,
+      "¥": 4,
+      "%": 5,
+    }
+
 
   def _number_format(self, number: str)->str:
     """
@@ -218,12 +235,16 @@ class Numbers_preprocessor:
 
 
   def update_numericals_dict(self, template, value, sign, order, unit):
+    if sign == "-":
+      sign = -1
+    else:
+      sign = 1
+    
     self.numericals_dict[self.number_id] = {
-        "template": template,
-        "value": value,
+        "value": float(value),
         "sign": sign,
-        "order": order,
-        "unit": unit
+        "order": self.order_to_int.get(order, 0),
+        "unit": self.unit_to_int.get(unit, 0)
     }
     self.number_id += 1
     pass
