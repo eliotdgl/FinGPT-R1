@@ -1,11 +1,11 @@
 # Core dependencies
 pandas
 numpy
-requests
-requests-html
-beautifulsoup4
-bs4
-lxml
+#requests
+#requests-html
+#beautifulsoup4
+#bs4
+#lxml
 
 # Text and NLP
 regex
@@ -19,6 +19,6 @@ jsonlines
 datasets
 
 # APIs and web data
-yfinance
-yahoo_fin
+#yfinance
+#yahoo_fin
 huggingface_hub
