@@ -120,12 +120,14 @@ optimizer = torch.optim.AdamW(
 )
 
 
+"""
 from data.financial_news.NIFTY import get_data
 data = get_data()
 train_data = data["train"].to_pandas()
 news, labels = train_data["news"], train_data["label"]
+"""
 
-dataloader = news
+dataloader = {}
 
 num_epochs = 20
 epoch_bar = tqdm(range(num_epochs))
