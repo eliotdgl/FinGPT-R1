@@ -6,9 +6,9 @@ from tqdm import tqdm
 
 # Main stock tickers
 df_sp500 = pd.DataFrame(si.tickers_sp500())
-df_nasdaq = pd.DataFrame(si.tickers_nasdaq())
-df_dow = pd.DataFrame(si.tickers_dow())
-df_other = pd.DataFrame(si.tickers_other())
+#df_nasdaq = pd.DataFrame(si.tickers_nasdaq())
+#df_dow = pd.DataFrame(si.tickers_dow())
+#df_other = pd.DataFrame(si.tickers_other())
 
 """ Other tickers sources
 tickers_ftse100
@@ -20,13 +20,13 @@ tickers_niftybank
 
 # Convert to sets
 set_sp500 = set(symbol for symbol in df_sp500[0].values.tolist())
-set_nasdaq = set(symbol for symbol in df_nasdaq[0].values.tolist())
-set_dow = set(symbol for symbol in df_dow[0].values.tolist())
-set_other = set(symbol for symbol in df_other[0].values.tolist())
+#set_nasdaq = set(symbol for symbol in df_nasdaq[0].values.tolist())
+#set_dow = set(symbol for symbol in df_dow[0].values.tolist())
+#set_other = set(symbol for symbol in df_other[0].values.tolist())
 
 
 # Union of all stock tickers
-raw_stock_tickers = set.union(set_sp500, set_nasdaq, set_dow, set_other)
+raw_stock_tickers = set.union(set_sp500) #set_nasdaq, set_dow, set_other)
 raw_stock_tickers.discard('')
 
 # Clean stock tickers
