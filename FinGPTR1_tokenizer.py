@@ -12,8 +12,8 @@ print(device)
 tokenizer = LlamaTokenizer.from_pretrained("openlm-research/open_llama_3b")
 model = LlamaForCausalLM.from_pretrained("openlm-research/open_llama_3b").to(device)
 
-old_vocab_len = len(tokenizer)
 
+old_vocab_len = len(tokenizer)
 
 # Import new tokens
 import json 
@@ -86,7 +86,10 @@ class CustomEmbeddings(nn.Module):
         with torch.no_grad():
             mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
             std = self.original_embeddings.weight[:old_vocab_len].std(dim=0)
-            self.new_embeddings_layer.weight.data = torch.normal(mean=mean, std=std)
+
+            mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+            std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+            self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
 
     def forward(self, input_ids: torch, num_dict: dict):
         embeddings = self.original_embeddings(input_ids).clone()
@@ -116,16 +119,15 @@ optimizer = torch.optim.AdamW(
     lr=5e-5
 )
 
-"""
+
 from data.financial_news.NIFTY import get_data
 data = get_data()
 train_data = data["train"].to_pandas()
 news, labels = train_data["news"], train_data["label"]
-"""
 
-dataloader = ["NVDA raised by +1.2%"]
+dataloader = news
 
-num_epochs = 3
+num_epochs = 20
 epoch_bar = tqdm(range(num_epochs))
 
 # Training loop to train EmbeddingMLP() 
@@ -155,7 +157,8 @@ with torch.no_grad():
     embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
 
 # Save the personalized tokenizer
-Path = ""
+Path = "./saved_tokenizer"
 tokenizer.save_pretrained(Path)
+torch.save(Custom_Embeddings.state_dict(), "custom_embeddings.pt")
 
-print("Tokenizer saved successfully.")
+print("Tokenizer saved successfully")
