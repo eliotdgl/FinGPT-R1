@@ -1,18 +1,37 @@
 import torch
 from torch import nn
+import os
 from transformers import LlamaTokenizer
-from FinGPTR1_tokenizer.training.FinGPTR1_tokenizer_training import CustomEmbeddings
+
+from FinGPTR1_tokenizer.training.FinGPTR1_tokenizer_training import FGPTR1_training
+from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
+
 class FinGPTR1_Tokenizer(nn.Module):
-    def __init__(self):
+    def __init__(self, base_model: str = None, base_tokenizer: str = None,
+                 data = None, 
+                 tokenizer_path: str = "FinGPTR1_tokenizer_training/saved/saved_tokenizer",
+                 embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt"):
         super(FinGPTR1_Tokenizer, self).__init__()
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.tokenizer = LlamaTokenizer.from_pretrained("FinGPTR1_tokenizer_training/saved/saved_tokenizer")
+
+        if base_model and base_tokenizer:
+            print("Training FinGPTR1 Tokenizer from given base...")
+            FGPTR1_training(base_model, base_tokenizer, data, tokenizer_path, embeddings_path, self.device)
+        elif not os.path.exists(tokenizer_path) or not os.path.exists(embeddings_path):
+            print("No pretrained tokenizer found, training from default base...")
+            default_model = "openlm-research/open_llama_3b"
+            FGPTR1_training(default_model, default_model, tokenizer_path, embeddings_path, self.device)
+
+
+        self.tokenizer = LlamaTokenizer.from_pretrained(tokenizer_path)
         self.custom_embeddings = CustomEmbeddings().to(self.device)
-        self.custom_embeddings.load_state_dict(torch.load("custom_embeddings.pt", map_location=self.device))
+        self.custom_embeddings.load_state_dict(torch.load(embeddings_path, map_location=self.device))
         self.custom_embeddings.eval()
+
 
     def forward(self, corpus):
         if isinstance(corpus, str):

@@ -50,7 +50,8 @@ class CustomEmbeddings(nn.Module):
             self.num_mlp = None
             self.stocks_fin_indices_torch = None
             self.num_indices_torch = None
-    
+
+
     def forward(self, input_ids: torch, num_dict: dict):
         embeddings = self.original_embeddings(input_ids).clone()
         # Create a mask for the new added tokens
