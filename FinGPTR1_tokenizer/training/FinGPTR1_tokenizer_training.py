@@ -7,7 +7,7 @@ from tokenization.preprocess_text import preprocess_text
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
 
 
-def FGPTR1_training(base_model: str = "openlm-research/open_llama_3b", base_tokenizer: str = "openlm-research/open_llama_3b",
+def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
                     data = None,
                     tokenizer_path: str = "FinGPTR1_tokenizer_training/saved/saved_tokenizer",
                     embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt",
@@ -15,11 +15,15 @@ def FGPTR1_training(base_model: str = "openlm-research/open_llama_3b", base_toke
 
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
+    print(device)
+    print('\n Importing base tokenizer and model')
     # Load base tokenizer and model
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    model = LlamaForCausalLM.from_pretrained(base_tokenizer).to(device)
+    if base_model is not None and base_tokenizer is not None:
+        tokenizer = LlamaTokenizer.from_pretrained(base_model)
+        model = LlamaForCausalLM.from_pretrained(base_tokenizer).to(device)
+    else:
+        tokenizer = LlamaTokenizer.from_pretrained("FinGPTR1_tokenizer/training/base_model/open_llama_3b_model")
+        model = LlamaForCausalLM.from_pretrained("FinGPTR1_tokenizer/training/base_model/open_llama_3b_model").to(device)
 
     old_vocab_len = len(tokenizer)
 

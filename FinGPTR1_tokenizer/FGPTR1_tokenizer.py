@@ -16,15 +16,14 @@ class FinGPTR1_Tokenizer(nn.Module):
         super(FinGPTR1_Tokenizer, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        print(self.device)
 
         if base_model and base_tokenizer:
-            print("Training FinGPTR1 Tokenizer from given base...")
+            print(f"Training FinGPTR1 Tokenizer from given base: {base_model} | {base_tokenizer}")
             FGPTR1_training(base_model, base_tokenizer, data, tokenizer_path, embeddings_path, self.device)
         elif not os.path.exists(tokenizer_path) or not os.path.exists(embeddings_path):
-            print("No pretrained tokenizer found, training from default base...")
-            default_model = "openlm-research/open_llama_3b"
-            FGPTR1_training(default_model, default_model, tokenizer_path, embeddings_path, self.device)
+            print("FinGPTR1 Tokenizer not pretrained, training from default base: openlm-research/open_llama_3b")
+            FGPTR1_training(None, None, data, tokenizer_path, embeddings_path, self.device)
 
 
         self.tokenizer = LlamaTokenizer.from_pretrained(tokenizer_path)
