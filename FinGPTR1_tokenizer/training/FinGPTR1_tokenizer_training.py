@@ -10,7 +10,6 @@ from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
 
 def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
                     data = None,
-                    tokenizer_path: str = "FinGPTR1_tokenizer_training/saved/saved_tokenizer",
                     embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt",
                     device = None):
 
@@ -108,7 +107,12 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
             epoch_loss += loss.item()
         print(f"Training Tokenizer | Epoch {epoch} loss: {epoch_loss}")
 
+    print("Special tokenizer trained successfully")
 
+    torch.save(Custom_Embeddings.state_dict(), embeddings_path)
+    print("Tokenizer saved successfully")
+
+    """
     with torch.no_grad():
         # Update the model's embedding layer
         embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
@@ -119,3 +123,4 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
     torch.save(Custom_Embeddings.state_dict(), embeddings_path)
 
     print("Tokenizer saved successfully")
+    """

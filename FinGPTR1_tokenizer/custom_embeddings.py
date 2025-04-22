@@ -20,7 +20,7 @@ class CustomEmbeddings(nn.Module):
             num_indices = list(range(len_vocab_added_stocks_fin, new_vocab_len))
             self.num_indices_torch = torch.tensor(num_indices).to(device)
             
-            self.embedding_dim=original_embeddings.embedding_dim
+            self.embedding_dim = original_embeddings.embedding_dim
             
             self.new_embeddings_layer = nn.Embedding(
                 num_embeddings=len(new_tokens_indices),

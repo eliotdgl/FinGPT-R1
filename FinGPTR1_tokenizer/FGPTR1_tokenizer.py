@@ -10,23 +10,22 @@ from tokenization.preprocess_text import preprocess_text
 
 class FinGPTR1_Tokenizer(nn.Module):
     def __init__(self, base_model: str = None, base_tokenizer: str = None,
-                 data = None, 
-                 tokenizer_path: str = "FinGPTR1_tokenizer_training/saved/saved_tokenizer",
+                 data = None,
                  embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt"):
         super(FinGPTR1_Tokenizer, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(self.device)
 
-        if base_model and base_tokenizer:
-            print(f"Training FinGPTR1 Tokenizer from given base: {base_model} | {base_tokenizer}")
-            FGPTR1_training(base_model, base_tokenizer, data, tokenizer_path, embeddings_path, self.device)
-        elif not os.path.exists(tokenizer_path) or not os.path.exists(embeddings_path):
+        if not base_model or not base_tokenizer:
+            base_model = "openlm-research/open_llama_3b"
+            base_tokenizer = "openlm-research/open_llama_3b"
+        if not os.path.exists(embeddings_path):
             print("FinGPTR1 Tokenizer not pretrained, training from default base: openlm-research/open_llama_3b")
-            FGPTR1_training(None, None, data, tokenizer_path, embeddings_path, self.device)
+            FGPTR1_training(None, None, data, embeddings_path, self.device)
 
 
-        self.tokenizer = LlamaTokenizer.from_pretrained(tokenizer_path)
+        self.tokenizer = LlamaTokenizer.from_pretrained(base_tokenizer)
         self.custom_embeddings = CustomEmbeddings().to(self.device)
         self.custom_embeddings.load_state_dict(torch.load(embeddings_path, map_location=self.device))
         self.custom_embeddings.eval()
