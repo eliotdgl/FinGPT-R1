@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from tqdm import tqdm
 from transformers import LlamaTokenizer, LlamaForCausalLM
+import json 
 
 from tokenization.preprocess_text import preprocess_text
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
@@ -28,7 +29,6 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
     old_vocab_len = len(tokenizer)
 
     # Import new tokens
-    import json 
         # Load stock indices vocabulary
     with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
         stock_indices = list(json.load(f).values())
@@ -115,6 +115,7 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
 
     # Save the personalized tokenizer
     tokenizer.save_pretrained(tokenizer_path)
+    model.save_pretrained(tokenizer_path)
     torch.save(Custom_Embeddings.state_dict(), embeddings_path)
 
     print("Tokenizer saved successfully")
