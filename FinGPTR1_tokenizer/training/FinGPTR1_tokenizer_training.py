@@ -1,29 +1,31 @@
 import torch
 from torch import nn
+import os
+import json
 from tqdm import tqdm
 from transformers import LlamaTokenizer, LlamaForCausalLM
 import json 
 
 from tokenization.preprocess_text import preprocess_text
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
+from torch.utils.data import DataLoader
 
 
-def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
-                    data = None,
-                    embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt",
+def FGPTR1_training(base_model: str = None,
+                    embeddings_path: str = "FinGPTR1_tokenizer/saved/custom_embeddings.pt",
                     device = None):
 
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
+
     print('\n Importing base tokenizer and model')
     # Load base tokenizer and model
-    if base_model is not None and base_tokenizer is not None:
+    if base_model is not None:
         tokenizer = LlamaTokenizer.from_pretrained(base_model)
-        model = LlamaForCausalLM.from_pretrained(base_tokenizer).to(device)
+        model = LlamaForCausalLM.from_pretrained(base_model).to(device)
     else:
-        tokenizer = LlamaTokenizer.from_pretrained("FinGPTR1_tokenizer/training/base_model/open_llama_3b_model")
-        model = LlamaForCausalLM.from_pretrained("FinGPTR1_tokenizer/training/base_model/open_llama_3b_model").to(device)
+        tokenizer = LlamaTokenizer.from_pretrained("openlm-research/open_llama_3b")
+        model = LlamaForCausalLM.from_pretrained("openlm-research/open_llama_3b").to(device)
 
     old_vocab_len = len(tokenizer)
 
@@ -71,19 +73,22 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
         lr=5e-5
     )
 
-    """
-    if data is None:
-        from data.financial_news.NIFTY import get_data
-        data = get_data()
-        train_data = data["train"].to_pandas()
-        news, labels = train_data["news"], train_data["label"]
-        data = news
-    """
 
+    from datasets import load_from_disk
+    data = load_from_disk("data/nifty_dataset_local")
+
+    """
+    from data.financial_news.NIFTY import get_data
+    data = get_data()
+    """
+    train_data = data["train"].to_pandas()
+    news, labels = train_data["news"], train_data["label"]
+
+    dataloader = DataLoader(news, batch_size=8, shuffle=True)
     dataloader = ["APPL raised by $100"]
 
 
-    num_epochs = 1
+    num_epochs = 5
     epoch_bar = tqdm(range(num_epochs))
 
     # Training loop to train EmbeddingMLP() 
@@ -92,7 +97,19 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
 
         epoch_loss = 0
         for batch in dataloader:
+            if isinstance(batch, str):
+                batch = [batch]
+            preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch])
+            print(preprocessed_batch)
+            print(type(preprocessed_batch))
+            
+            inputs = tokenizer(list(preprocessed_batch), return_tensors="pt")
+            input_ids = inputs["input_ids"].to(device)
+
+            
             preprocessed_batch, batch_numbers_dict = preprocess_text(batch)
+            print(preprocessed_batch)
+            print(type(preprocessed_batch))
             inputs = tokenizer(preprocessed_batch, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
 
@@ -109,9 +126,19 @@ def FGPTR1_training(base_model: str = None, base_tokenizer: str = None,
 
     print("Special tokenizer trained successfully")
 
+    os.makedirs("FinGPTR1_tokenizer/saved", exist_ok=True)
+
     torch.save(Custom_Embeddings.state_dict(), embeddings_path)
     print("Tokenizer saved successfully")
 
+    metadata = {
+        "old_vocab_len": old_vocab_len,
+        "len_vocab_added_stocks_fin": len_vocab_added_stocks_fin,
+        "new_vocab_len": new_vocab_len
+    }
+    with open("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json", "w") as f:
+        json.dump(metadata, f)
+    
     """
     with torch.no_grad():
         # Update the model's embedding layer

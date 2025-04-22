@@ -3,54 +3,46 @@ from torch import nn
 
 # Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
-    def __init__(self, original_embeddings: torch = None, old_vocab_len: int = None, len_vocab_added_stocks_fin: int = None, new_vocab_len: int = None, device = None):
+    def __init__(self, original_embeddings: torch, old_vocab_len: int, len_vocab_added_stocks_fin: int, new_vocab_len: int = None, device = None):
         super(CustomEmbeddings, self).__init__()
 
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        if original_embeddings is not None and old_vocab_len is not None and len_vocab_added_stocks_fin is not None and new_vocab_len is not None:
-            self.original_embeddings = original_embeddings
-            
-            new_tokens_indices = list(range(old_vocab_len, new_vocab_len))
-
-            stocks_fin_indices = list(range(old_vocab_len, len_vocab_added_stocks_fin))
-            self.stocks_fin_indices_torch = torch.tensor(stocks_fin_indices).to(device)
-
-            num_indices = list(range(len_vocab_added_stocks_fin, new_vocab_len))
-            self.num_indices_torch = torch.tensor(num_indices).to(device)
-            
-            self.embedding_dim = original_embeddings.embedding_dim
-            
-            self.new_embeddings_layer = nn.Embedding(
-                num_embeddings=len(new_tokens_indices),
-                embedding_dim=self.embedding_dim
-            )
-
-            input_dim = 4
-            self.num_mlp = nn.Sequential(
-                nn.Linear(input_dim, 2*self.embedding_dim),
-                nn.Tanh(),
-                nn.Linear(2*self.embedding_dim, self.embedding_dim)
-            )
-
-            # Randomly initialize new embeddings according to original embeddings
-            with torch.no_grad():
-                mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
-                std = self.original_embeddings.weight[:old_vocab_len].std(dim=0)
-
-                mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
-                std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
-                self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
         
-        else:
-            # If no embeddings are passed, it is assumed we are loading a pretrained model
-            self.original_embeddings = None
-            self.new_embeddings_layer = None
-            self.num_mlp = None
-            self.stocks_fin_indices_torch = None
-            self.num_indices_torch = None
+        self.original_embeddings = original_embeddings
+        
+        new_tokens_indices = list(range(old_vocab_len, new_vocab_len))
 
+        stocks_fin_indices = list(range(old_vocab_len, len_vocab_added_stocks_fin))
+        self.stocks_fin_indices_torch = torch.tensor(stocks_fin_indices).to(device)
+
+        num_indices = list(range(len_vocab_added_stocks_fin, new_vocab_len))
+        self.num_indices_torch = torch.tensor(num_indices).to(device)
+        
+        self.embedding_dim = original_embeddings.embedding_dim
+        
+        self.new_embeddings_layer = nn.Embedding(
+            num_embeddings=len(new_tokens_indices),
+            embedding_dim=self.embedding_dim
+        )
+
+        input_dim = 4
+        self.num_mlp = nn.Sequential(
+            nn.Linear(input_dim, 2*self.embedding_dim),
+            nn.Tanh(),
+            nn.Linear(2*self.embedding_dim, self.embedding_dim)
+        )
+
+        # Randomly initialize new embeddings according to original embeddings
+        with torch.no_grad():
+            mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
+            std = self.original_embeddings.weight[:old_vocab_len].std(dim=0)
+
+            mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+            std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+            self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
+        
 
     def forward(self, input_ids: torch, num_dict: dict):
         embeddings = self.original_embeddings(input_ids).clone()
