@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 import os
-from transformers import LlamaTokenizer
+import json
+from transformers import LlamaTokenizer, LlamaForCausalLM
 
 from FinGPTR1_tokenizer.training.FinGPTR1_tokenizer_training import FGPTR1_training
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
@@ -9,25 +10,36 @@ from tokenization.preprocess_text import preprocess_text
 
 
 class FinGPTR1_Tokenizer(nn.Module):
-    def __init__(self, base_model: str = None, base_tokenizer: str = None,
-                 data = None, 
-                 tokenizer_path: str = "FinGPTR1_tokenizer_training/saved/saved_tokenizer",
-                 embeddings_path: str = "FinGPTR1_tokenizer_training/saved/custom_embeddings.pt"):
+    def __init__(self, base_model: str = "openlm-research/open_llama_3b",
+                 embeddings_path: str = "FinGPTR1_tokenizer/saved/custom_embeddings.pt",
+                 train: bool = False):
         super(FinGPTR1_Tokenizer, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(self.device)
 
-        if base_model and base_tokenizer:
-            print(f"Training FinGPTR1 Tokenizer from given base: {base_model} | {base_tokenizer}")
-            FGPTR1_training(base_model, base_tokenizer, data, tokenizer_path, embeddings_path, self.device)
-        elif not os.path.exists(tokenizer_path) or not os.path.exists(embeddings_path):
+        if not base_model:
+            base_model = "openlm-research/open_llama_3b"
+        if not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings.pt") or not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json") or train:
             print("FinGPTR1 Tokenizer not pretrained, training from default base: openlm-research/open_llama_3b")
-            FGPTR1_training(None, None, data, tokenizer_path, embeddings_path, self.device)
+            FGPTR1_training(base_model, embeddings_path, self.device)
 
+        with open("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json", "r") as f:
+            metadata = json.load(f)
 
-        self.tokenizer = LlamaTokenizer.from_pretrained(tokenizer_path)
-        self.custom_embeddings = CustomEmbeddings().to(self.device)
+        tokenizer = LlamaTokenizer.from_pretrained(base_model)
+        model = LlamaForCausalLM.from_pretrained(base_model).to(self.device)
+        
+        model.resize_token_embeddings(metadata["new_vocab_len"])
+        embedding_layer = model.get_input_embeddings()
+
+        self.custom_embeddings = CustomEmbeddings(
+            original_embeddings=embedding_layer,
+            old_vocab_len=metadata["old_vocab_len"],
+            len_vocab_added_stocks_fin=metadata["len_vocab_added_stocks_fin"],
+            new_vocab_len=metadata["new_vocab_len"],
+            device=self.device
+        ).to(self.device)
         self.custom_embeddings.load_state_dict(torch.load(embeddings_path, map_location=self.device))
         self.custom_embeddings.eval()
 
