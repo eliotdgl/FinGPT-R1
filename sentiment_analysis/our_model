@@ -1,0 +1,137 @@
+import numpy as np
+from sklearn.metrics import accuracy_score
+
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
+import pandas as pd
+
+# Map label indices to regression targets
+label_to_target = {
+    'negative': -1.0,  
+    'neutral': 0.0,   
+    'positive': 1.0    
+}
+
+class CustomDataset(Dataset):
+    def __init__(self, X, y):
+        self.X = torch.tensor(X, dtype=torch.float32)
+        self.y = torch.tensor([label_to_target[label] for label in y], dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
+    
+
+
+class RegressionModel(nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
+        )
+
+    def forward(self, x):
+        return self.model(x).squeeze(1)  # Output shape: (batch,)
+
+def train_model_with_threshold_search(model, train_dataset, val_dataset, epochs=20, batch_size=32, lr=1e-3):
+    from torch.utils.data import DataLoader
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = nn.MSELoss()
+
+    best_val_acc = 0
+    best_thresholds = (None, None)
+
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+        for x_batch, y_batch in train_loader:
+            optimizer.zero_grad()
+            output = model(x_batch)
+            loss = criterion(output, y_batch)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+
+        # Validation phase
+        model.eval()
+        val_preds = []
+        val_labels = []
+        with torch.no_grad():
+            for x_val, y_val in val_loader:
+                preds = model(x_val).detach().cpu().numpy()
+                val_preds.extend(preds)
+                val_labels.extend(y_val.cpu().numpy())
+
+        # Convert regression targets back to original class indices
+        y_true_labels = []
+        for y in val_labels:
+            if y == -1.0:
+                y_true_labels.append(0)
+            elif y == 0.0:
+                y_true_labels.append(1)
+            else:
+                y_true_labels.append(2)
+
+        alpha, beta, val_acc = find_best_thresholds(val_preds, y_true_labels)
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            best_thresholds = (alpha, beta)
+
+        print(f"Epoch {epoch+1}/{epochs} - Loss: {total_loss:.4f} - Val Acc: {val_acc:.4f} (α={alpha:.2f}, β={beta:.2f})")
+
+    print(f"\nBest thresholds found: alpha={best_thresholds[0]:.2f}, beta={best_thresholds[1]:.2f}, accuracy={best_val_acc:.4f}")
+    return best_thresholds
+
+
+def predict_with_thresholds(model, X, alpha, beta):
+    model.eval()
+    with torch.no_grad():
+        preds = model(torch.tensor(X, dtype=torch.float32)).cpu().numpy()
+
+    final_preds = []
+    for p in preds:
+        if p < alpha:
+            final_preds.append(0)
+        elif p > beta:
+            final_preds.append(2)
+        else:
+            final_preds.append(1)
+    return final_preds
+
+
+def find_best_thresholds(p_pred, y_true):
+    best_acc = 0
+    best_alpha = None
+    best_beta = None
+    
+    for alpha in np.linspace(-1.0, 0.0, 100):
+        for beta in np.linspace(0.0, 1.0, 100):
+            if alpha >= beta:
+                continue
+            preds = []
+            for p in p_pred:
+                if p < alpha:
+                    preds.append(0)  # Label A
+                elif p > beta:
+                    preds.append(2)  # Label C
+                else:
+                    preds.append(1)  # Label B
+            acc = accuracy_score(y_true, preds)
+            if acc > best_acc:
+                best_acc = acc
+                best_alpha = alpha
+                best_beta = beta
+
+    return best_alpha, best_beta, best_acc
+
+
+
