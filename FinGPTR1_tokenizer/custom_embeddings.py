@@ -35,25 +35,27 @@ class CustomEmbeddings(nn.Module):
         )
 
         # Randomly initialize new embeddings according to original embeddings
-        with torch.no_grad():
-            mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
-            std = self.original_embeddings.weight[:old_vocab_len].std(dim=0)
+        mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
+        std = self.original_embeddings.weight[:old_vocab_len].std(dim=0)
 
-            mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
-            std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
-            self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
+        mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+        std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
+        self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
         
 
     def forward(self, input_ids: torch, num_dict: dict):
+        trainable = False
         embeddings = self.original_embeddings(input_ids).clone()
         # Create a mask for the new added tokens
         masked_stocks_fin_embeddings = torch.isin(input_ids, self.stocks_fin_indices_torch)
         masked_num_embeddings = torch.isin(input_ids, self.num_indices_torch)
         # Modify the embeddings for the new added tokens only
         if masked_stocks_fin_embeddings.any():
+            trainable = True
             new_stocks_fin_input_ids = input_ids[masked_stocks_fin_embeddings] - self.stocks_fin_indices_torch[0]
             embeddings[masked_stocks_fin_embeddings] = self.new_embeddings_layer(new_stocks_fin_input_ids)
         if masked_num_embeddings.any():
+            trainable = True
             new_num_input_ids = input_ids[masked_num_embeddings] - self.num_indices_torch[0]
             embeddings_from_emblayer = self.new_embeddings_layer(new_num_input_ids)
 
@@ -62,4 +64,4 @@ class CustomEmbeddings(nn.Module):
 
             embeddings[masked_num_embeddings] = embeddings_from_emblayer + embeddings_from_mlp
 
-        return embeddings
+        return embeddings, trainable

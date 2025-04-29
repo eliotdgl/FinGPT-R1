@@ -8,7 +8,7 @@ import json
 
 from tokenization.preprocess_text import preprocess_text
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 
 
 def FGPTR1_training(base_model: str = None,
@@ -52,6 +52,8 @@ def FGPTR1_training(base_model: str = None,
 
     tokenizer.add_tokens(num_tokens)
 
+    tokenizer.pad_token = tokenizer.eos_token
+
     new_vocab_len = len(tokenizer)
 
 
@@ -82,12 +84,10 @@ def FGPTR1_training(base_model: str = None,
     data = get_data()
     """
     train_data = data["train"].to_pandas()
-    news, labels = train_data["news"], train_data["label"]
-
+    news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
+    #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
     dataloader = DataLoader(news, batch_size=8, shuffle=True)
-    dataloader = ["APPL raised by $100"]
-
-
+    
     num_epochs = 5
     epoch_bar = tqdm(range(num_epochs))
 
@@ -97,26 +97,28 @@ def FGPTR1_training(base_model: str = None,
 
         epoch_loss = 0
         for batch in dataloader:
+            
             if isinstance(batch, str):
                 batch = [batch]
             preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch])
-            print(preprocessed_batch)
-            print(type(preprocessed_batch))
-            
-            inputs = tokenizer(list(preprocessed_batch), return_tensors="pt")
-            input_ids = inputs["input_ids"].to(device)
+            inputs = tokenizer(list(preprocessed_batch), padding=True, truncation=True, return_tensors="pt")
+            batch_input_ids = inputs["input_ids"].to(device)
 
+            embeddings_list = []
+            loss_trainable = False
+            for i in range(batch_input_ids.size(0)):
+                input_ids = batch_input_ids[i].unsqueeze(0)
+                text_dict = batch_numbers_dict[i]
+                
+                embeddings, trainable = Custom_Embeddings(input_ids, text_dict)
+                embeddings_list.append(embeddings)
+                loss_trainable = loss_trainable or trainable
             
-            preprocessed_batch, batch_numbers_dict = preprocess_text(batch)
-            print(preprocessed_batch)
-            print(type(preprocessed_batch))
-            inputs = tokenizer(preprocessed_batch, return_tensors="pt")
-            input_ids = inputs["input_ids"].to(device)
+            if not loss_trainable:
+                continue
 
-            optimizer.zero_grad()
-            # Get the personalized embeddings (original|new_added_tokens) for the tokens in the batch
-            embeddings = Custom_Embeddings(input_ids, batch_numbers_dict)
-            output = model(inputs_embeds=embeddings, labels=input_ids)
+            embeddings_batch = torch.cat(embeddings_list, dim=0)
+            output = model(inputs_embeds=embeddings_batch, labels=batch_input_ids)
             loss = output.loss
             loss.backward()
             optimizer.step()
