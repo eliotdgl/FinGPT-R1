@@ -20,11 +20,11 @@ class Numbers_preprocessor:
 
     # Master pattern combining all patterns
     self.master_pattern = re.compile(
-            rf"(?P<number>{self.number_pattern.pattern})|"
             rf"(?P<currency_before>{self.before_currency_pattern.pattern})|"
             rf"(?P<currency_after>{self.after_currency_pattern.pattern})|"
             rf"(?P<percent_before>{self.before_percentage_pattern.pattern})|"
-            rf"(?P<percent_after>{self.after_percentage_pattern.pattern})"
+            rf"(?P<percent_after>{self.after_percentage_pattern.pattern})|"
+            rf"(?P<number>{self.number_pattern.pattern})"
         )
 
     self.numericals_dict = {}
@@ -270,7 +270,10 @@ class Numbers_preprocessor:
       output_text += text[last_end:start]
       last_end = end
 
+      print(match)
+
       matched_text = match.group()
+    
       if match.lastgroup == 'number':
         submatch = self.number_pattern.match(matched_text)
         output_text += self._number_convert(submatch)

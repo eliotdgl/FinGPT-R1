@@ -1,36 +1,42 @@
 import torch
 from torch import nn
 
+
 # Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
     def __init__(self, original_embeddings: torch, old_vocab_len: int, len_vocab_added_stocks_fin: int, new_vocab_len: int = None, device = None):
         super(CustomEmbeddings, self).__init__()
 
         if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+    
 
-        
         self.original_embeddings = original_embeddings
         
         new_tokens_indices = list(range(old_vocab_len, new_vocab_len))
 
         stocks_fin_indices = list(range(old_vocab_len, len_vocab_added_stocks_fin))
-        self.stocks_fin_indices_torch = torch.tensor(stocks_fin_indices).to(device)
+        self.stocks_fin_indices_torch = torch.tensor(stocks_fin_indices).to(self.device)
 
         num_indices = list(range(len_vocab_added_stocks_fin, new_vocab_len))
-        self.num_indices_torch = torch.tensor(num_indices).to(device)
+        self.num_indices_torch = torch.tensor(num_indices).to(self.device)
         
         self.embedding_dim = original_embeddings.embedding_dim
-        
+
+        self.unit_embed = nn.Embedding(6, 10)
+        self.order_proj = nn.Linear(1, 10)
+        self.sign_proj = nn.Embedding(2, 10)
+
         self.new_embeddings_layer = nn.Embedding(
             num_embeddings=len(new_tokens_indices),
             embedding_dim=self.embedding_dim
         )
 
-        input_dim = 4
         self.num_mlp = nn.Sequential(
-            nn.Linear(input_dim, 2*self.embedding_dim),
-            nn.Tanh(),
+            nn.Linear(31, 2*self.embedding_dim),
+            nn.GELU(),
             nn.Linear(2*self.embedding_dim, self.embedding_dim)
         )
 
@@ -41,8 +47,22 @@ class CustomEmbeddings(nn.Module):
         mean_matrix = mean.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
         std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
         self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
-        
 
+        self.to(self.device)
+        
+    def enhance_num_dict(self, numericals_dicts):
+        values = torch.tensor([v["value"] for v in numericals_dicts.values()], device=self.device)
+        orders = torch.tensor([v["order"] for v in numericals_dicts.values()], device=self.device).float()
+        units = torch.tensor([v["unit"] for v in numericals_dicts.values()], device=self.device).long()
+        signs = torch.tensor([v["sign"] for v in numericals_dicts.values()], device=self.device).long()
+
+        log_value = torch.log10(values.abs() + 1e-8).unsqueeze(-1)
+        order_emb = self.order_proj(orders.unsqueeze(-1))
+        unit_emb = self.unit_embed(units)
+        sign_emb = self.sign_proj((signs > 0).long())
+
+        return torch.cat([log_value, order_emb, unit_emb, sign_emb], dim=-1)
+    
     def forward(self, input_ids: torch, num_dict: dict):
         trainable = False
         embeddings = self.original_embeddings(input_ids).clone()
@@ -59,9 +79,11 @@ class CustomEmbeddings(nn.Module):
             new_num_input_ids = input_ids[masked_num_embeddings] - self.num_indices_torch[0]
             embeddings_from_emblayer = self.new_embeddings_layer(new_num_input_ids)
 
-            num_features = torch.stack([torch.tensor(list(num_dict[i].values()), dtype=torch.float32) for i in range(masked_num_embeddings.sum())], dim=0).to(input_ids.device)
+            num_features = self.enhance_num_dict(num_dict)
             embeddings_from_mlp = self.num_mlp(num_features)
-
+            print(embeddings_from_mlp.shape)
+            print(embeddings_from_emblayer.shape)
+            print(embeddings[masked_num_embeddings].shape)
             embeddings[masked_num_embeddings] = embeddings_from_emblayer + embeddings_from_mlp
 
         return embeddings, trainable

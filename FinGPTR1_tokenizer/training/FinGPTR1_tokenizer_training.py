@@ -8,7 +8,7 @@ import json
 
 from tokenization.preprocess_text import preprocess_text
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 
 def FGPTR1_training(base_model: str = None,
@@ -53,7 +53,7 @@ def FGPTR1_training(base_model: str = None,
     tokenizer.add_tokens(num_tokens)
 
     tokenizer.pad_token = tokenizer.eos_token
-
+    
     new_vocab_len = len(tokenizer)
 
 
@@ -71,7 +71,10 @@ def FGPTR1_training(base_model: str = None,
     Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, len_vocab_added_stocks_fin, new_vocab_len).to(device)
     optimizer = torch.optim.AdamW(
         list(Custom_Embeddings.new_embeddings_layer.parameters()) +
-        list(Custom_Embeddings.num_mlp.parameters()),
+        list(Custom_Embeddings.num_mlp.parameters()) +
+        list(Custom_Embeddings.unit_embed.parameters()) +
+        list(Custom_Embeddings.order_proj.parameters()) +
+        list(Custom_Embeddings.sign_proj.parameters()),
         lr=5e-5
     )
 
@@ -86,7 +89,8 @@ def FGPTR1_training(base_model: str = None,
     train_data = data["train"].to_pandas()
     news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
-    dataloader = DataLoader(news, batch_size=8, shuffle=True)
+    news = news[:1000]
+    dataloader = DataLoader(news, batch_size=4, shuffle=True)
     
     num_epochs = 5
     epoch_bar = tqdm(range(num_epochs))
@@ -97,7 +101,6 @@ def FGPTR1_training(base_model: str = None,
 
         epoch_loss = 0
         for batch in dataloader:
-            
             if isinstance(batch, str):
                 batch = [batch]
             preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch])
@@ -107,6 +110,8 @@ def FGPTR1_training(base_model: str = None,
             embeddings_list = []
             loss_trainable = False
             for i in range(batch_input_ids.size(0)):
+                print(batch[i])
+                print(preprocessed_batch[i])
                 input_ids = batch_input_ids[i].unsqueeze(0)
                 text_dict = batch_numbers_dict[i]
                 

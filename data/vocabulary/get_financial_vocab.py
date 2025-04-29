@@ -14,7 +14,7 @@ financial_vocab = [
     # Economic / Market Indicators
     "inflation", "gdp",
     "valuation", "liquidity",
-    "recession", "unemployment", "cpi", "pmi",
+    "recession", "unemployment", "cpi", "pmi", "pct"
 
     # Sentiment & Analyst Language
     "outperform", "underperform",
