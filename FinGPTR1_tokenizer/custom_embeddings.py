@@ -81,9 +81,6 @@ class CustomEmbeddings(nn.Module):
 
             num_features = self.enhance_num_dict(num_dict)
             embeddings_from_mlp = self.num_mlp(num_features)
-            print(embeddings_from_mlp.shape)
-            print(embeddings_from_emblayer.shape)
-            print(embeddings[masked_num_embeddings].shape)
             embeddings[masked_num_embeddings] = embeddings_from_emblayer + embeddings_from_mlp
 
         return embeddings, trainable
