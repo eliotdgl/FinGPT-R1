@@ -9,17 +9,19 @@ financial_vocab = [
 
     # Financial Instruments / Assets
     "stock", "equity", "bond", "etf", "option", "futures",
-    "crypto", "commodity", "index",
+    "crypto", "commodity", "index", "BTC", "bitcoin", "ETH", "etherum"
 
     # Economic / Market Indicators
     "inflation", "gdp",
     "valuation", "liquidity",
-    "recession", "unemployment", "cpi", "pmi", "pct"
+    "recession", "unemployment", "cpi", "pmi", "pct", "ppi"
 
     # Sentiment & Analyst Language
     "outperform", "underperform",
     "upside", "risk", "guidance", "speculation", "sentiment",
-    "confidence", "uncertainty"
+    "confidence", "uncertainty",
+
+    "Q1", "Q2", "Q3", "Q4"
 ]
 
 

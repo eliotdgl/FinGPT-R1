@@ -76,11 +76,15 @@ class CustomEmbeddings(nn.Module):
             embeddings[masked_stocks_fin_embeddings] = self.new_embeddings_layer(new_stocks_fin_input_ids)
         if masked_num_embeddings.any():
             trainable = True
+            print("Filtered input_ids:", input_ids[masked_num_embeddings])
             new_num_input_ids = input_ids[masked_num_embeddings] - self.num_indices_torch[0]
             embeddings_from_emblayer = self.new_embeddings_layer(new_num_input_ids)
 
             num_features = self.enhance_num_dict(num_dict)
             embeddings_from_mlp = self.num_mlp(num_features)
+            print("embeddings_from_emblayer shape:", embeddings_from_emblayer.shape)
+            print("embeddings_from_mlp shape:", embeddings_from_mlp.shape)
+            print("masked_num_embeddings shape:", embeddings[masked_num_embeddings].shape)
             embeddings[masked_num_embeddings] = embeddings_from_emblayer + embeddings_from_mlp
 
         return embeddings, trainable

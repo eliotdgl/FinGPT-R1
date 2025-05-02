@@ -5,14 +5,14 @@ class Numbers_preprocessor:
     """
       Initialize the class with regex patterns for different text formats
     """
-    self.number_pattern = re.compile(r"(\s)?([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?(\.|\,)?(\s?)")
+    self.number_pattern = re.compile(r"(\s)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?(\.|\,)?((?=\s|$))")
 
     self.currencies = ["$", "€", "£", "¥"] #"CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
     self.regex_currencies = r"(?:\$|\€|\£|\¥|(?i:dollars|euros|pounds|yens))" #|CHF|CAD|AUD|NZD|CNY|\₹|\₽|R\$|RZAR|MXN|SGD|HKD|SEK|NOK|\₩|\₺)"
 
     # Currency-related patterns
-    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?")
-    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?\s?(" + self.regex_currencies + ")")
+    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?")
+    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?\s?(" + self.regex_currencies + ")")
 
     # Percentage-related patterns
     self.before_percentage_pattern = re.compile(r"([+-]?)((?:percent|%))\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)")
