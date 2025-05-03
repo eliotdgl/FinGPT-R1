@@ -22,3 +22,6 @@ datasets
 #yfinance
 #yahoo_fin
 huggingface_hub
+
+#RL environment
+gym
