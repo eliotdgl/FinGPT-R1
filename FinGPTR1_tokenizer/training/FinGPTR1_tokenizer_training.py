@@ -103,8 +103,7 @@ def FGPTR1_training(base_model: str = None,
     train_data = data["train"].to_pandas()
     news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
-    news = news[:1000]
-    dataloader = DataLoader(news, batch_size=16, shuffle=True)
+    dataloader = DataLoader(news, batch_size=32, shuffle=True)
 
     num_epochs = 5
     epoch_bar = tqdm(range(num_epochs), position=0)
@@ -125,8 +124,6 @@ def FGPTR1_training(base_model: str = None,
             embeddings_list = []
             loss_trainable = False
             for i in range(batch_input_ids.size(0)):
-                print(batch[i])
-                print(preprocessed_batch[i])
                 input_ids = batch_input_ids[i].unsqueeze(0)
                 text_dict = batch_numbers_dict[i]
                 
