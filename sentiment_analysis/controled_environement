@@ -5,24 +5,53 @@ from gym import spaces
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 class TextDataGenerator:
-    def __init__(self, n_classes=2, samples_per_episode=100):
+    def __init__(self, n_classes=3, samples_per_episode=100):
         self.n_classes = n_classes
         self.samples_per_episode = samples_per_episode
-        self.templates = {
-            0: [ "{} revenue was {} last quarter and is now {}.","{} went revenue from {} to {}.",
-                "{} growth was {} last quarter and is now {}."],
-            1: ["{} revenue went down of {} last quarter","{} lost {} last quarter.",
-                "{} capitalization went from {} down to {}.", "{} {}(+{})"],
-            2: ["{} revenue went up of {} last quarter","{} gained {} last quarter.", 
-                "{} capitalization went from {} up to {}.","{} {}(-{})"],
+        self.templates_one_number = {
+            #phrases with neutral sentiment with one number
+            0: ["{} keeps the price target at {}.",
+                "{} declares quarterly dividend of {} per Share, consistent with previous quarters" ],
+            #phrases with negative sentiment with one number
+            1: ["{} lost {} last quarter.",
+                ],
+            #phrases with positive sentiment with one number
+            2: ["{} gained {} last quarter.", 
+                ],
         }
-        self.numbers = {
+        self.templates_two_numbers = {
+            #phrases with neutral sentiment with two numbers
+            0: [ "{} revenue was {} last quarter and is now {}.",
+                 "{} went revenue from {} to {}.","{} growth was {} last quarter and is now {}.",
+                 "Increase in total sales {} offset by decline in comparable store sales {}"],
+            #phrases with negative sentiment with two numbers
+            1: ["{} revenue went down of {} last quarter",
+                "{} capitalization went from {} down to {}.", ],
+            #phrases with positive sentiment with two numbers
+            2: ["{} revenue went up of {} last quarter", 
+                "{} capitalization went from {} up to {}."],
+        }
+        self.templates_stock_change ={
+            
+            1: ["{} {}(-{})"],
+            2: ["{} {}(+{})"]
+
         }
         self.companies ={
         ["The company","Apple", "Google", "Microsoft", "Amazon", "Tesla","IBM", "Intel", "NVIDIA", "AMD", "Qualcomm","Samsung", "Sony", "LG", "Panasonic", "Toshiba"]
         }
 
     def generate_sentence(self, label):
+        type_of_sentence = random.randint(0, 2)
+        if type_of_sentence == 0:
+            template = random.choice(self.templates_one_number[label])
+            words = str(random.normal(50,1000))
+        elif type_of_sentence == 1:
+            template = random.choice(self.templates_two_numbers[label])
+            words = random.sample(self.vocab[label], 2)
+        else:
+            template = random.choice(self.templates_stock_change[label])
+            words = random.sample(self.vocab[label], 2)
         words = random.sample(self.vocab[label], 2)
         template = random.choice(self.templates[label])
         return template.format(*words)
