@@ -44,6 +44,17 @@ def FGPTR1_training(base_model: str = None,
     with open("data/vocabulary/financial_vocab.json", "r") as f:
         financial_tokens = json.load(f)
 
+    def already_in_vocab(tokenizer, tokens):
+        existing_vocab = set(tokenizer.get_vocab().keys())
+        for token in tokens:
+            if token in existing_vocab:
+                print("Déjà dedans: ", token)
+
+    already_in_vocab(tokenizer, stock_indices)
+    already_in_vocab(tokenizer, stock_tickers)
+    already_in_vocab(tokenizer, num_tokens)
+    already_in_vocab(tokenizer, financial_tokens)
+
     # Add new tokens to the tokenizer
     tokenizer.add_tokens(stock_indices)
     tokenizer.add_tokens(stock_tickers)
@@ -92,9 +103,8 @@ def FGPTR1_training(base_model: str = None,
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
     news = news[:1000]
     dataloader = DataLoader(news, batch_size=16, shuffle=True)
-    dataloader = ["Cenovus Energy to present at BMO Capital Markets 2010 Unconventional Resource Conference on Tuesday, January 12, 2010"]
 
-    num_epochs = 1
+    num_epochs = 5
     epoch_bar = tqdm(range(num_epochs), position=0)
 
     # Training loop to train EmbeddingMLP() 
@@ -112,7 +122,9 @@ def FGPTR1_training(base_model: str = None,
 
             embeddings_list = []
             loss_trainable = False
-            for i in range(batch_input_ids.size(0))
+            for i in range(batch_input_ids.size(0)):
+                print(batch[i])
+                print(preprocessed_batch[i])
                 input_ids = batch_input_ids[i].unsqueeze(0)
                 text_dict = batch_numbers_dict[i]
                 

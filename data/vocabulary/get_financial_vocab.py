@@ -5,11 +5,11 @@ financial_vocab = [
 
     # Market Sentiment - Negative (Bearish)
     "bearish", "crash", "correction", "downtrend",
-    "loss", "plunge", "dip", "volatility",
+    "plunge", "dip", "volatility",
 
     # Financial Instruments / Assets
-    "stock", "equity", "bond", "etf", "option", "futures",
-    "crypto", "commodity", "index", "BTC", "bitcoin", "ETH", "etherum"
+    "equity", "bond", "etf", "futures",
+    "crypto", "commodity", "BTC", "bitcoin", "etherum"
 
     # Economic / Market Indicators
     "inflation", "gdp",
@@ -18,7 +18,7 @@ financial_vocab = [
 
     # Sentiment & Analyst Language
     "outperform", "underperform",
-    "upside", "risk", "guidance", "speculation", "sentiment",
+    "upside", "guidance", "speculation", "sentiment",
     "confidence", "uncertainty",
 
     "Q1", "Q2", "Q3", "Q4"

@@ -54,42 +54,43 @@ class Numbers_preprocessor:
     first_digit = number[0]
     if '.' in number:
       int_part, dec_part = number.split('.', 1)
+      print(int_part, dec_part)
       if len(int_part) == 1 and first_digit in ['0', '1', '2']:
         int_pattern = first_digit
-        dec_parttern = '#' * min(len(dec_part),2)
+        dec_pattern = '#' * min(len(dec_part),2)
       elif len(int_part) == 1 and first_digit in ['3', '4']:
         int_pattern = first_digit
-        dec_parttern = '#'
+        dec_pattern = '#'
       else:
         int_pattern = '#' * len(int_part)
-        dec_parttern = None
+        dec_pattern = None
 
-      if len(number) in [4,5,6]:
+      if len(int_pattern) in [4,5,6]:
         int_pattern = int_pattern[:-3]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'K'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'K'
         else:
           return f"{int_pattern}", 'K'
-      elif len(number) in [7,8,9]:
+      elif len(int_pattern) in [7,8,9]:
         int_pattern = int_pattern[:-6]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'M'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'M'
         else:
           return f"{int_pattern}", 'M'
-      elif len(number) in [10,11,12]:
+      elif len(int_pattern) in [10,11,12]:
         int_pattern = int_pattern[:-9]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'B'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'B'
         else:
           return f"{int_pattern}", 'B'
-      elif len(number) in [13,14,15]:
+      elif len(int_pattern) in [13,14,15]:
         int_pattern = int_pattern[:-12]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'T'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'T'
         else:
           return f"{int_pattern}", 'T'
-      elif dec_parttern is not None:
-        return f"{int_pattern}.{dec_parttern}", None
+      elif dec_pattern is not None:
+        return f"{int_pattern}.{dec_pattern}", None
       else:
         return f"{int_pattern}", None
 
