@@ -18,7 +18,7 @@ def FGPTR1_training(base_model: str = None,
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print('\n Importing base tokenizer and model')
+    print('\nImporting base tokenizer and model')
     # Load base tokenizer and model
     if base_model is not None:
         tokenizer = LlamaTokenizer.from_pretrained(base_model)
@@ -26,6 +26,7 @@ def FGPTR1_training(base_model: str = None,
     else:
         tokenizer = LlamaTokenizer.from_pretrained("openlm-research/open_llama_3b")
         model = LlamaForCausalLM.from_pretrained("openlm-research/open_llama_3b").to(device)
+
 
     old_vocab_len = len(tokenizer)
 
@@ -43,6 +44,19 @@ def FGPTR1_training(base_model: str = None,
     with open("data/vocabulary/financial_vocab.json", "r") as f:
         financial_tokens = json.load(f)
 
+    """
+    def already_in_vocab(tokenizer, tokens):
+        existing_vocab = set(tokenizer.get_vocab().keys())
+        for token in tokens:
+            if token in existing_vocab:
+                print("Token already in tokenizer's vocab: ", token)
+
+    already_in_vocab(tokenizer, stock_indices)
+    already_in_vocab(tokenizer, stock_tickers)
+    already_in_vocab(tokenizer, num_tokens)
+    already_in_vocab(tokenizer, financial_tokens)
+    """
+    
     # Add new tokens to the tokenizer
     tokenizer.add_tokens(stock_indices)
     tokenizer.add_tokens(stock_tickers)
@@ -89,18 +103,18 @@ def FGPTR1_training(base_model: str = None,
     train_data = data["train"].to_pandas()
     news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
-    news = news[:1000]
-    dataloader = DataLoader(news, batch_size=4, shuffle=True)
-    
+    dataloader = DataLoader(news, batch_size=32, shuffle=True)
+
     num_epochs = 5
-    epoch_bar = tqdm(range(num_epochs))
+    epoch_bar = tqdm(range(num_epochs), position=0)
 
     # Training loop to train EmbeddingMLP() 
     Custom_Embeddings.train()
     for epoch in epoch_bar:
 
         epoch_loss = 0
-        for batch in dataloader:
+        batch_bar = tqdm(dataloader, position=1, leave=False)
+        for batch in batch_bar:
             if isinstance(batch, str):
                 batch = [batch]
             preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch])
@@ -110,8 +124,6 @@ def FGPTR1_training(base_model: str = None,
             embeddings_list = []
             loss_trainable = False
             for i in range(batch_input_ids.size(0)):
-                print(batch[i])
-                print(preprocessed_batch[i])
                 input_ids = batch_input_ids[i].unsqueeze(0)
                 text_dict = batch_numbers_dict[i]
                 

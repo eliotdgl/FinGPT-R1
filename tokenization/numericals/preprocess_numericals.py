@@ -5,14 +5,14 @@ class Numbers_preprocessor:
     """
       Initialize the class with regex patterns for different text formats
     """
-    self.number_pattern = re.compile(r"\s([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?(\.|\,)?\s?")
+    self.number_pattern = re.compile(r"(\s)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?(\.|\,)?((?=\s|$))")
 
     self.currencies = ["$", "€", "£", "¥"] #"CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
     self.regex_currencies = r"(?:\$|\€|\£|\¥|(?i:dollars|euros|pounds|yens))" #|CHF|CAD|AUD|NZD|CNY|\₹|\₽|R\$|RZAR|MXN|SGD|HKD|SEK|NOK|\₩|\₺)"
 
     # Currency-related patterns
-    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?")
-    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t)))?\s?(" + self.regex_currencies + ")")
+    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?")
+    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?\s?(" + self.regex_currencies + ")")
 
     # Percentage-related patterns
     self.before_percentage_pattern = re.compile(r"([+-]?)((?:percent|%))\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)")
@@ -20,12 +20,11 @@ class Numbers_preprocessor:
 
     # Master pattern combining all patterns
     self.master_pattern = re.compile(
-            rf"(?P<currency_before>{self.before_currency_pattern.pattern})|"
-            rf"(?P<currency_after>{self.after_currency_pattern.pattern})|"
             rf"(?P<percent_before>{self.before_percentage_pattern.pattern})|"
             rf"(?P<percent_after>{self.after_percentage_pattern.pattern})|"
-            rf"(?P<number>{self.number_pattern.pattern})"
-        )
+            rf"(?P<currency_before>{self.before_currency_pattern.pattern})|"
+            rf"(?P<currency_after>{self.after_currency_pattern.pattern})"
+    )
 
     self.numericals_dict = {}
     self.number_id = 0
@@ -57,40 +56,40 @@ class Numbers_preprocessor:
       int_part, dec_part = number.split('.', 1)
       if len(int_part) == 1 and first_digit in ['0', '1', '2']:
         int_pattern = first_digit
-        dec_parttern = '#' * min(len(dec_part),2)
+        dec_pattern = '#' * min(len(dec_part),2)
       elif len(int_part) == 1 and first_digit in ['3', '4']:
         int_pattern = first_digit
-        dec_parttern = '#'
+        dec_pattern = '#'
       else:
         int_pattern = '#' * len(int_part)
-        dec_parttern = None
+        dec_pattern = None
 
-      if len(number) in [4,5,6]:
+      if len(int_pattern) in [4,5,6]:
         int_pattern = int_pattern[:-3]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'K'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'K'
         else:
           return f"{int_pattern}", 'K'
-      elif len(number) in [7,8,9]:
+      elif len(int_pattern) in [7,8,9]:
         int_pattern = int_pattern[:-6]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'M'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'M'
         else:
           return f"{int_pattern}", 'M'
-      elif len(number) in [10,11,12]:
+      elif len(int_pattern) in [10,11,12]:
         int_pattern = int_pattern[:-9]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'B'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'B'
         else:
           return f"{int_pattern}", 'B'
-      elif len(number) in [13,14,15]:
+      elif len(int_pattern) in [13,14,15]:
         int_pattern = int_pattern[:-12]
-        if dec_parttern is not None:
-          return f"{int_pattern}.{dec_parttern}", 'T'
+        if dec_pattern is not None:
+          return f"{int_pattern}.{dec_pattern}", 'T'
         else:
           return f"{int_pattern}", 'T'
-      elif dec_parttern is not None:
-        return f"{int_pattern}.{dec_parttern}", None
+      elif dec_pattern is not None:
+        return f"{int_pattern}.{dec_pattern}", None
       else:
         return f"{int_pattern}", None
 
@@ -128,19 +127,21 @@ class Numbers_preprocessor:
         currency = "£"
       elif currency == "yens":
         currency = "¥"
+    else:
+      currency = ""
     
     # Order
     if order is None:
       order = order_from_zeros if order_from_zeros is not None else ""
     else:
       order = order.lower()
-      if order in ["thousand", "thousands", "k"]:
+      if order in ["thousand", "thousands", "k", "thsnds", "thsnd", "thsds", "thsd"]:
         order = "K"
-      elif order in ["million", "millions", "m"]:
+      elif order in ["million", "millions", "m", "mln", "mil", "mill", "mills", "mils", "mlns"]:
         order = "M"
-      elif order in ["billion", "billions", "b"]:
+      elif order in ["billion", "billions", "b", "bn", "bln", "bil", "bill", "bills", "bils", "blns", "bns"]:
         order = "B"
-      elif order in ["trillion", "trillions", "t"]:
+      elif order in ["trillion", "trillions", "t", "tn", "trills", "trill", "trils", "tril", "trlls", "trll", "trls", "trl"]:
         order = "T"
       
       if order_from_zeros is not None:
@@ -166,16 +167,24 @@ class Numbers_preprocessor:
     """
       Convert a matched number (with optional sign) into its formatted version
     """
-    sign, number, original_order, dot = match.groups()
+    space_before, sign, number, original_order, dot, space_after = match.groups()
     number = number.replace(",", "")
     formatted_number, order_from_zeros = self._number_format(number)
 
     sign, _, order = self._check_sign_currency_order(sign, None, original_order, order_from_zeros)
     
-    result = f"{sign}{formatted_number}{order}{dot}"
+    if dot is None:
+      dot = ""
+    if space_before is None:
+      space_before = ""
+    if space_after is None:
+      space_before = ""
+
+    result = f"[FinNUM:{sign}{formatted_number}{order}]{dot}"
+
     self.update_numericals_dict(result, number, sign, original_order, "")
 
-    return ' ' + result + ' '
+    return space_before + result + space_after
 
   def _before_currency_convert(self, match: re.Match)->str:
     """
@@ -188,7 +197,7 @@ class Numbers_preprocessor:
     _, _, dict_order = self._check_sign_currency_order(None, None, order, None)
     sign, currency, order = self._check_sign_currency_order(sign, currency, order, order_from_zeros)
 
-    result = f"{sign}{currency}{formatted_number}{order}"
+    result = f"[FinNUM:{sign}{currency}{formatted_number}{order}]"
     self.update_numericals_dict(result, number, sign, dict_order, currency)
 
     return result
@@ -204,7 +213,7 @@ class Numbers_preprocessor:
     _, _, dict_order = self._check_sign_currency_order(None, None, order, None)
     sign, currency, order = self._check_sign_currency_order(sign, currency, order, order_from_zeros)
 
-    result = f"{sign}{currency}{formatted_number}{order}"
+    result = f"[FinNUM:{sign}{currency}{formatted_number}{order}]"
     self.update_numericals_dict(result, number, sign, dict_order, currency)
 
     return result
@@ -219,7 +228,7 @@ class Numbers_preprocessor:
     
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
-    result = f"{sign}{formatted_number}%"
+    result = f"[FinNUM:{sign}{formatted_number}%]"
     self.update_numericals_dict(result, number, sign, "", percent)
 
     return result
@@ -234,7 +243,7 @@ class Numbers_preprocessor:
 
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
-    result = f"{sign}{formatted_number}%"
+    result = f"[FinNUM:{sign}{formatted_number}%]"
     self.update_numericals_dict(result, number, sign, "", percent)
 
     return result
@@ -262,34 +271,31 @@ class Numbers_preprocessor:
     self.numericals_dict = {}
     self.number_id = 0
 
-    output_text = ""
+    intermediate_text = ""
     last_end = 0
 
     for match in self.master_pattern.finditer(text):
       start, end = match.span()
-      output_text += text[last_end:start]
+      intermediate_text += text[last_end:start]
       last_end = end
-
-      print(match)
 
       matched_text = match.group()
     
-      if match.lastgroup == 'number':
-        submatch = self.number_pattern.match(matched_text)
-        output_text += self._number_convert(submatch)
-      elif match.lastgroup == 'currency_before':
+      if match.lastgroup == 'currency_before':
         submatch = self.before_currency_pattern.match(matched_text)
-        output_text += self._before_currency_convert(submatch)
+        intermediate_text += self._before_currency_convert(submatch)
       elif match.lastgroup == 'currency_after':
         submatch = self.after_currency_pattern.match(matched_text)
-        output_text += self._after_currency_convert(submatch)
+        intermediate_text += self._after_currency_convert(submatch)
       elif match.lastgroup == 'percent_before':
         submatch = self.before_percentage_pattern.match(matched_text)
-        output_text += self._before_percentage_convert(submatch)
+        intermediate_text += self._before_percentage_convert(submatch)
       elif match.lastgroup == 'percent_after':
         submatch = self.after_percentage_pattern.match(matched_text)
-        output_text += self._after_percentage_convert(submatch)
+        intermediate_text += self._after_percentage_convert(submatch)
 
-    output_text += text[last_end:]
+    intermediate_text += text[last_end:]
+    
+    output_text = self.number_pattern.sub(self._number_convert, intermediate_text)
 
     return output_text, self.numericals_dict

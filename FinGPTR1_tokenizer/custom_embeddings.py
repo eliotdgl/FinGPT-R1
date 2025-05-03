@@ -48,6 +48,14 @@ class CustomEmbeddings(nn.Module):
         std_matrix = std.unsqueeze(0).expand(len(new_tokens_indices), -1).clone()
         self.new_embeddings_layer.weight.data = torch.normal(mean=mean_matrix, std=std_matrix)
 
+
+        self.new_token_ids = list(range(old_vocab_len, new_vocab_len))
+
+        # Build mapping: token_id → index in new_embeddings_layer
+        self.token_id_to_new_embedding_idx_tensor = torch.full((new_vocab_len,), -1, dtype=torch.long).to(self.device)
+        for i, token_id in enumerate(self.new_token_ids):
+            self.token_id_to_new_embedding_idx_tensor[token_id] = i
+        
         self.to(self.device)
         
     def enhance_num_dict(self, numericals_dicts):
@@ -72,18 +80,17 @@ class CustomEmbeddings(nn.Module):
         # Modify the embeddings for the new added tokens only
         if masked_stocks_fin_embeddings.any():
             trainable = True
-            new_stocks_fin_input_ids = input_ids[masked_stocks_fin_embeddings] - self.stocks_fin_indices_torch[0]
-            embeddings[masked_stocks_fin_embeddings] = self.new_embeddings_layer(new_stocks_fin_input_ids)
+            new_stocks_fin_input_ids = input_ids[masked_stocks_fin_embeddings]
+            selected_ids = self.token_id_to_new_embedding_idx_tensor[new_stocks_fin_input_ids]
+            embeddings[masked_stocks_fin_embeddings] = self.new_embeddings_layer(selected_ids)
         if masked_num_embeddings.any():
             trainable = True
-            new_num_input_ids = input_ids[masked_num_embeddings] - self.num_indices_torch[0]
-            embeddings_from_emblayer = self.new_embeddings_layer(new_num_input_ids)
+            new_num_input_ids = input_ids[masked_num_embeddings]
+            selected_ids = self.token_id_to_new_embedding_idx_tensor[new_num_input_ids]
+            embeddings_from_emblayer = self.new_embeddings_layer(selected_ids)
 
             num_features = self.enhance_num_dict(num_dict)
             embeddings_from_mlp = self.num_mlp(num_features)
-            print(embeddings_from_mlp.shape)
-            print(embeddings_from_emblayer.shape)
-            print(embeddings[masked_num_embeddings].shape)
             embeddings[masked_num_embeddings] = embeddings_from_emblayer + embeddings_from_mlp
 
         return embeddings, trainable

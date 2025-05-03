@@ -1,8 +1,10 @@
 tokenized_stock_indices = {
+    "S&P": "<FinGPTICKER_S&P>",
     "S&P 500": "<FinGPTICKER_S&P500>",
     "S&P500": "<FinGPTICKER_S&P500>",
     "Standard & Poor's 500": "<FinGPTICKER_S&P500>",
 
+    "Dow": "<FinGPTICKER_Dow>",
     "Dow Jones Industrial Average": "<FinGPTICKER_DowJones>",
     "DJIA": "<FinGPTICKER_DowJones>",
     "Dow Jones": "<FinGPTICKER_DowJones>",
@@ -27,7 +29,9 @@ tokenized_stock_indices = {
     "Russell 3000": "<FinGPTICKER_Russell>",
     "Russell": "<FinGPTICKER_Russell>",
 
-    "MSCI": "<FinGPTICKER_MSCI>"
+    "MSCI": "<FinGPTICKER_MSCI>",
+    "MSCI World": "<FinGPTICKER_MSCIWorld>",
+    "MSCI Emerging Markets": "<FinGPTICKER_MSCIem>"
 }
 
 
