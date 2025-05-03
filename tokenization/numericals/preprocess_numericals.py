@@ -180,7 +180,7 @@ class Numbers_preprocessor:
     if space_after is None:
       space_before = ""
 
-    result = f"{sign}{formatted_number}{order}{dot}"
+    result = f"[FinNUM:{sign}{formatted_number}{order}]{dot}"
 
     self.update_numericals_dict(result, number, sign, original_order, "")
 
@@ -197,7 +197,7 @@ class Numbers_preprocessor:
     _, _, dict_order = self._check_sign_currency_order(None, None, order, None)
     sign, currency, order = self._check_sign_currency_order(sign, currency, order, order_from_zeros)
 
-    result = f"{sign}{currency}{formatted_number}{order}"
+    result = f"[FinNUM:{sign}{currency}{formatted_number}{order}]"
     self.update_numericals_dict(result, number, sign, dict_order, currency)
 
     return result
@@ -213,7 +213,7 @@ class Numbers_preprocessor:
     _, _, dict_order = self._check_sign_currency_order(None, None, order, None)
     sign, currency, order = self._check_sign_currency_order(sign, currency, order, order_from_zeros)
 
-    result = f"{sign}{currency}{formatted_number}{order}"
+    result = f"[FinNUM:{sign}{currency}{formatted_number}{order}]"
     self.update_numericals_dict(result, number, sign, dict_order, currency)
 
     return result
@@ -228,7 +228,7 @@ class Numbers_preprocessor:
     
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
-    result = f"{sign}{formatted_number}%"
+    result = f"[FinNUM:{sign}{formatted_number}%]"
     self.update_numericals_dict(result, number, sign, "", percent)
 
     return result
@@ -243,7 +243,7 @@ class Numbers_preprocessor:
 
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
-    result = f"{sign}{formatted_number}%"
+    result = f"[FinNUM:{sign}{formatted_number}%]"
     self.update_numericals_dict(result, number, sign, "", percent)
 
     return result

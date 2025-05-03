@@ -14,6 +14,7 @@ numbers_add_neg = ['-' + number for number in (numbers_add_percentages+numbers_a
 
 numericals_vocab = pos_numbers + numbers_add_percentages + numbers_add_orders + numbers_add_neg
 
+num_vocab = [f"[FinNUM:{num}]" for num in numericals_vocab]
 
 # Export numericals
 import json
@@ -22,4 +23,4 @@ import os
 if __name__ == "__main__":
     os.makedirs("tokenization/vocabulary", exist_ok=True)
     with open("tokenization/vocabulary/numericals_vocab.json", "w") as f:
-        json.dump(numericals_vocab, f)
+        json.dump(num_vocab, f)
