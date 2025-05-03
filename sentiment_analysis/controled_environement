@@ -13,10 +13,10 @@ class TextDataGenerator:
             0: ["{} keeps the price target at {}.",
                 "{} declares quarterly dividend of {} per Share, consistent with previous quarters" ],
             #phrases with negative sentiment with one number
-            1: ["{} lost {} last quarter.",
+            -1: ["{} lost {} last quarter.",
                 ],
             #phrases with positive sentiment with one number
-            2: ["{} gained {} last quarter.", 
+            1: ["{} gained {} last quarter.", 
                 ],
         }
         self.templates_two_numbers = {
@@ -25,43 +25,89 @@ class TextDataGenerator:
                  "{} went revenue from {} to {}.","{} growth was {} last quarter and is now {}.",
                  "Increase in total sales {} offset by decline in comparable store sales {}"],
             #phrases with negative sentiment with two numbers
-            1: ["{} revenue went down of {} last quarter",
+            -1: ["{} revenue went down of {} last quarter",
                 "{} capitalization went from {} down to {}.", ],
             #phrases with positive sentiment with two numbers
-            2: ["{} revenue went up of {} last quarter", 
+            1: ["{} revenue went up of {} last quarter", 
                 "{} capitalization went from {} up to {}."],
         }
         self.templates_stock_change ={
             
-            1: ["{} {}(-{})"],
-            2: ["{} {}(+{})"]
+            -1: ["{} {}(-{})"],
+            1: ["{} {}(+{})"]
 
         }
         self.companies ={
         ["The company","Apple", "Google", "Microsoft", "Amazon", "Tesla","IBM", "Intel", "NVIDIA", "AMD", "Qualcomm","Samsung", "Sony", "LG", "Panasonic", "Toshiba"]
         }
 
-    def generate_sentence(self, label):
+        self.currencies ={
+            "$",
+            "£",
+            "€",
+            "¥"
+        }
+
+    def generate_sentence(self):
+        company = random.choice(self.companies)
+        
         type_of_sentence = random.randint(0, 2)
+        currency = random.choice(list(self.currencies.values()))
+        
         if type_of_sentence == 0:
-            template = random.choice(self.templates_one_number[label])
-            words = str(random.normal(50,1000))
+            # One number template — neutral if small, positive/negative otherwise
+            number = round(random.uniform(-200, 200), 2)
+            if abs(number) < 1:
+                label = 0  # neutral
+                template = random.choice(self.templates_one_number[label])
+                sentence = template.format(company, f"{currency}{abs(number)}M")
+            elif number > 0:
+                label = 1  # positive
+                template = random.choice(self.templates_one_number[label])
+                sentence = template.format(company, f"{currency}{abs(number)}M")
+            else:
+                label = -1  # negative
+                template = random.choice(self.templates_one_number[label])
+                sentence = template.format(company, f"{currency}{abs(number)}M")
+
         elif type_of_sentence == 1:
+            # Two number template — compare second to first
+            num1 = round(random.uniform(10, 1000), 2)
+            delta = round(random.uniform(-300, 300), 2)
+            num2 = round(num1 + delta, 2)
+            if abs(delta) < 10:
+                label = 0  # neutral
+            elif delta > 0:
+                label = 1  # positive
+            else:
+                label = -1  # negative
             template = random.choice(self.templates_two_numbers[label])
-            words = random.sample(self.vocab[label], 2)
+            sentence = template.format(company, f"{currency}{num1}M", f"{currency}{num2}M")
+
         else:
-            template = random.choice(self.templates_stock_change[label])
-            words = random.sample(self.vocab[label], 2)
-        words = random.sample(self.vocab[label], 2)
-        template = random.choice(self.templates[label])
-        return template.format(*words)
+            # Stock change template — label based on % change
+            change = round(random.uniform(-10, 10), 2)
+            if abs(change) < 0.1:
+                label = 0  # neutral 
+                change_str = f"{abs(change)}%"
+            elif change > 0:
+                label = 1  # positive
+                change_str = f"+{change}%"
+            else:
+                label = -1  # negative
+                change_str = f"-{abs(change)}%"
+            template = random.choice(self.templates_stock_change.get(label, self.templates_stock_change[1]))
+            sentence = template.format(company, "stock changed", change_str)
+
+        return sentence, label
+
+
 
     def generate_batch(self):
         texts = []
         labels = []
         for _ in range(self.samples_per_episode):
-            label = random.randint(0, self.n_classes - 1)
-            text = self.generate_sentence(label)
+            text,label = self.generate_sentence(label)
             texts.append(text)
             labels.append(label)
         return texts, labels
