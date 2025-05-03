@@ -5,14 +5,14 @@ class Numbers_preprocessor:
     """
       Initialize the class with regex patterns for different text formats
     """
-    self.number_pattern = re.compile(r"(\s)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?(\.|\,)?((?=\s|$))")
+    self.number_pattern = re.compile(r"(\s)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?(\.|\,)?((?=\s|$))")
 
     self.currencies = ["$", "€", "£", "¥"] #"CHF", "CAD", "AUD", "NZD", "CNY", "₹", "₽", "R$", "RZAR", "MXN", "SGD", "HKD", "SEK", "NOK", "₩", "₺"]
     self.regex_currencies = r"(?:\$|\€|\£|\¥|(?i:dollars|euros|pounds|yens))" #|CHF|CAD|AUD|NZD|CNY|\₹|\₽|R\$|RZAR|MXN|SGD|HKD|SEK|NOK|\₩|\₺)"
 
     # Currency-related patterns
-    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?")
-    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousand|thousands|million|millions|billion|billions|trillion|trillions|k|m|b|t|thsnd|mln|mil|mill|bn|bln|bil|bill|t|th)))?\s?(" + self.regex_currencies + ")")
+    self.before_currency_pattern = re.compile(r"([+-]?)(" + self.regex_currencies + r")\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?")
+    self.after_currency_pattern = re.compile(r"([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?\s?(" + self.regex_currencies + ")")
 
     # Percentage-related patterns
     self.before_percentage_pattern = re.compile(r"([+-]?)((?:percent|%))\s?(\d{1,}(?:,\d+)*(?:\.\d+)?)")
@@ -54,7 +54,6 @@ class Numbers_preprocessor:
     first_digit = number[0]
     if '.' in number:
       int_part, dec_part = number.split('.', 1)
-      print(int_part, dec_part)
       if len(int_part) == 1 and first_digit in ['0', '1', '2']:
         int_pattern = first_digit
         dec_pattern = '#' * min(len(dec_part),2)
@@ -136,13 +135,13 @@ class Numbers_preprocessor:
       order = order_from_zeros if order_from_zeros is not None else ""
     else:
       order = order.lower()
-      if order in ["thousand", "thousands", "k", "thsnd"]:
+      if order in ["thousand", "thousands", "k", "thsnds", "thsnd", "thsds", "thsd"]:
         order = "K"
-      elif order in ["million", "millions", "m", "mln", "mil", "mill"]:
+      elif order in ["million", "millions", "m", "mln", "mil", "mill", "mills", "mils", "mlns"]:
         order = "M"
-      elif order in ["billion", "billions", "b", "bn", "bln", "bil", "bill"]:
+      elif order in ["billion", "billions", "b", "bn", "bln", "bil", "bill", "bills", "bils", "blns", "bns"]:
         order = "B"
-      elif order in ["trillion", "trillions", "t", "tn"]:
+      elif order in ["trillion", "trillions", "t", "tn", "trills", "trill", "trils", "tril", "trlls", "trll", "trls", "trl"]:
         order = "T"
       
       if order_from_zeros is not None:

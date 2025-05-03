@@ -18,7 +18,7 @@ def FGPTR1_training(base_model: str = None,
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print('\n Importing base tokenizer and model')
+    print('\nImporting base tokenizer and model')
     # Load base tokenizer and model
     if base_model is not None:
         tokenizer = LlamaTokenizer.from_pretrained(base_model)
@@ -44,17 +44,19 @@ def FGPTR1_training(base_model: str = None,
     with open("data/vocabulary/financial_vocab.json", "r") as f:
         financial_tokens = json.load(f)
 
+    """
     def already_in_vocab(tokenizer, tokens):
         existing_vocab = set(tokenizer.get_vocab().keys())
         for token in tokens:
             if token in existing_vocab:
-                print("Déjà dedans: ", token)
+                print("Token already in tokenizer's vocab: ", token)
 
     already_in_vocab(tokenizer, stock_indices)
     already_in_vocab(tokenizer, stock_tickers)
     already_in_vocab(tokenizer, num_tokens)
     already_in_vocab(tokenizer, financial_tokens)
-
+    """
+    
     # Add new tokens to the tokenizer
     tokenizer.add_tokens(stock_indices)
     tokenizer.add_tokens(stock_tickers)
