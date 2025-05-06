@@ -22,7 +22,7 @@ class TextDataGenerator:
         self.templates_two_numbers = {
             #phrases with neutral sentiment with two numbers
             0: [ "{} revenue was {} last quarter and is now {}.",
-                 "{} went revenue from {} to {}.","{} growth was {} last quarter and is now {}.",
+                 "{}'s revenue went from {} to {}.","{} growth was {} last quarter and is now {}.",
                  "Increase in total sales {} offset by decline in comparable store sales {}"],
             #phrases with negative sentiment with two numbers
             -1: ["{} revenue went down of {} last quarter",
