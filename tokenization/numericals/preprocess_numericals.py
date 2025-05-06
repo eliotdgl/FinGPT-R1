@@ -231,7 +231,7 @@ class Numbers_preprocessor:
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
     result = f"[FinNUM:{sign}{formatted_number}%]"
-    self.update_numericals_dict(result, number, sign, "", percent)
+    self.update_numericals_dict(result, number, sign, "", '%')
 
     return result
 
@@ -246,7 +246,7 @@ class Numbers_preprocessor:
     sign, _, _ = self._check_sign_currency_order(sign, None, None, None)
 
     result = f"[FinNUM:{sign}{formatted_number}%]"
-    self.update_numericals_dict(result, number, sign, "", percent)
+    self.update_numericals_dict(result, number, sign, "", '%')
 
     return result
 

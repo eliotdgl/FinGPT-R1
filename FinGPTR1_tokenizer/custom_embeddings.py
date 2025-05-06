@@ -94,7 +94,7 @@ class CustomEmbeddings(nn.Module):
             trainable = True
             new_stocks_fin_input_ids = input_ids[masked_stocks_fin_embeddings]
             selected_ids = self.token_id_to_new_embedding_idx_tensor[new_stocks_fin_input_ids]
-            embeddings[masked_stocks_fin_embeddings, :] = self.new_embeddings_layer(selected_ids)
+            embeddings[masked_stocks_fin_embeddings.view(-1)] = self.new_embeddings_layer(selected_ids)
         if masked_num_embeddings.any():
             trainable = True
             new_num_input_ids = input_ids[masked_num_embeddings]
@@ -109,6 +109,7 @@ class CustomEmbeddings(nn.Module):
             embeddings_from_mlp = embeddings_from_mlp.view(-1, self.embedding_dim)
 
             embeddings[masked_num_embeddings.view(-1)] = embeddings_from_emblayer + embeddings_from_mlp
-            embeddings = embeddings.view(batch_dim, inputs_dim, self.embedding_dim)
+        
+        embeddings = embeddings.view(batch_dim, inputs_dim, self.embedding_dim)
 
         return embeddings, trainable

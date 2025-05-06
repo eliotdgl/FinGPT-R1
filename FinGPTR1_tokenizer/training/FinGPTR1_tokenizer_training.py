@@ -101,7 +101,7 @@ def FGPTR1_training(base_model: str = None,
     train_data = data["train"].to_pandas()
     news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
-    dataloader = DataLoader(news, batch_size=2, shuffle=False)
+    dataloader = DataLoader(news, batch_size=16, shuffle=False)
     
     num_epochs = 1
     epoch_bar = tqdm(range(num_epochs), position=0)
