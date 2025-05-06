@@ -86,9 +86,7 @@ def FGPTR1_training(base_model: str = None,
     optimizer = torch.optim.AdamW(
         list(Custom_Embeddings.new_embeddings_layer.parameters()) +
         list(Custom_Embeddings.num_mlp.parameters()) +
-        list(Custom_Embeddings.unit_embed.parameters()) +
-        list(Custom_Embeddings.order_proj.parameters()) +
-        list(Custom_Embeddings.sign_proj.parameters()),
+        list(Custom_Embeddings.unit_embed.parameters()),
         lr=5e-5
     )
 
@@ -103,9 +101,9 @@ def FGPTR1_training(base_model: str = None,
     train_data = data["train"].to_pandas()
     news = [headline for entry in train_data["news"].tolist() for headline in entry.split('\n')]
     #labels = [label for entry in train_data["label"].tolist() for label in entry.split('\n')]
-    dataloader = DataLoader(news, batch_size=32, shuffle=True)
-
-    num_epochs = 5
+    dataloader = DataLoader(news, batch_size=2, shuffle=False)
+    
+    num_epochs = 1
     epoch_bar = tqdm(range(num_epochs), position=0)
 
     # Training loop to train EmbeddingMLP() 
@@ -118,24 +116,18 @@ def FGPTR1_training(base_model: str = None,
             if isinstance(batch, str):
                 batch = [batch]
             preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch])
+
             inputs = tokenizer(list(preprocessed_batch), padding=True, truncation=True, return_tensors="pt")
             batch_input_ids = inputs["input_ids"].to(device)
 
-            embeddings_list = []
-            loss_trainable = False
-            for i in range(batch_input_ids.size(0)):
-                input_ids = batch_input_ids[i].unsqueeze(0)
-                text_dict = batch_numbers_dict[i]
-                
-                embeddings, trainable = Custom_Embeddings(input_ids, text_dict)
-                embeddings_list.append(embeddings)
-                loss_trainable = loss_trainable or trainable
-            
-            if not loss_trainable:
+            embeddings_batch, trainable = Custom_Embeddings(batch_input_ids, batch_numbers_dict)
+
+            if not trainable:
                 continue
 
-            embeddings_batch = torch.cat(embeddings_list, dim=0)
             output = model(inputs_embeds=embeddings_batch, labels=batch_input_ids)
+            
+            optimizer.zero_grad()
             loss = output.loss
             loss.backward()
             optimizer.step()
