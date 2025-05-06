@@ -1,4 +1,5 @@
 import re
+import numpy as np
 
 class Numbers_preprocessor:
   def __init__(self):
@@ -30,11 +31,11 @@ class Numbers_preprocessor:
     self.number_id = 0
 
     self.order_to_int = {
-      "": 0,
-      "K": 3,
-      "M": 6,
-      "B": 9,
-      "T": 12,
+      "": 1e0,
+      "K": 1e3,
+      "M": 1e6,
+      "B": 1e9,
+      "T": 1e12,
     }
 
     self.unit_to_int = {
@@ -167,11 +168,12 @@ class Numbers_preprocessor:
     """
       Convert a matched number (with optional sign) into its formatted version
     """
-    space_before, sign, number, original_order, dot, space_after = match.groups()
+    space_before, sign, number, order, dot, space_after = match.groups()
     number = number.replace(",", "")
     formatted_number, order_from_zeros = self._number_format(number)
 
-    sign, _, order = self._check_sign_currency_order(sign, None, original_order, order_from_zeros)
+    _, _, dict_order = self._check_sign_currency_order(None, None, order, None)
+    sign, _, order = self._check_sign_currency_order(sign, None, order, order_from_zeros)
     
     if dot is None:
       dot = ""
@@ -182,7 +184,7 @@ class Numbers_preprocessor:
 
     result = f"[FinNUM:{sign}{formatted_number}{order}]{dot}"
 
-    self.update_numericals_dict(result, number, sign, original_order, "")
+    self.update_numericals_dict(result, number, sign, dict_order, "")
 
     return space_before + result + space_after
 
@@ -256,13 +258,12 @@ class Numbers_preprocessor:
       sign = 1
     
     self.numericals_dict[self.number_id] = {
-        "value": float(value),
-        "sign": sign,
-        "order": self.order_to_int.get(order, 0),
-        "unit": self.unit_to_int.get(unit, 0)
+        "value": np.log10(abs(float(value)) * self.order_to_int[order] + 1) * np.sign(sign),
+        "unit": self.unit_to_int[unit]
     }
     self.number_id += 1
     pass
+
 
   def preprocess_text(self, text: str)->str:
     """
