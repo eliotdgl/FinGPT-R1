@@ -3,7 +3,7 @@ from torch import nn
 import os
 import json
 from tqdm import tqdm
-from transformers import LlamaTokenizer, LlamaForCausalLM
+from transformers import AutoTokenizer, AutoModelForMaskedLM
 import json 
 
 from tokenization.preprocess_text import preprocess_text
@@ -11,8 +11,7 @@ from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
 from torch.utils.data import DataLoader
 
 
-def FGPTR1_training(base_model: str = None,
-                    embeddings_path: str = "FinGPTR1_tokenizer/saved/custom_embeddings.pt",
+def FGPTR1_training(base_model: str = "yiyanghkust/finbert-tone",
                     device = None):
 
     if device is None:
@@ -20,12 +19,8 @@ def FGPTR1_training(base_model: str = None,
 
     print('\nImporting base tokenizer and model')
     # Load base tokenizer and model
-    if base_model is not None:
-        tokenizer = LlamaTokenizer.from_pretrained(base_model)
-        model = LlamaForCausalLM.from_pretrained(base_model).to(device)
-    else:
-        tokenizer = LlamaTokenizer.from_pretrained("openlm-research/open_llama_3b")
-        model = LlamaForCausalLM.from_pretrained("openlm-research/open_llama_3b").to(device)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
+    model = AutoModelForMaskedLM.from_pretrained(base_model).to(device)
 
 
     old_vocab_len = len(tokenizer)
@@ -66,7 +61,8 @@ def FGPTR1_training(base_model: str = None,
 
     tokenizer.add_tokens(num_tokens)
 
-    tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
     
     new_vocab_len = len(tokenizer)
 
@@ -120,12 +116,19 @@ def FGPTR1_training(base_model: str = None,
             inputs = tokenizer(list(preprocessed_batch), padding=True, truncation=True, return_tensors="pt")
             batch_input_ids = inputs["input_ids"].to(device)
 
-            embeddings_batch, trainable = Custom_Embeddings(batch_input_ids, batch_numbers_dict)
+            # Randomly mask 15% of tokens (except [PAD] tokens)
+            labels = batch_input_ids.clone()
+            rand = torch.rand(batch_input_ids.shape).to(device)
+            mask_arr = (rand < 0.15) * (batch_input_ids != tokenizer.pad_token_id)  # Mask 15% of tokens
+            labels[~mask_arr] = -100  # Set non-masked tokens to -100 (ignored in loss calculation)
+            batch_input_ids[mask_arr] = tokenizer.mask_token_id  # Replace with [MASK] token
 
+            embeddings_batch, trainable = Custom_Embeddings(batch_input_ids, batch_numbers_dict)
+            
             if not trainable:
                 continue
 
-            output = model(inputs_embeds=embeddings_batch, labels=batch_input_ids)
+            output = model(inputs_embeds=embeddings_batch, labels=labels)
             
             optimizer.zero_grad()
             loss = output.loss
@@ -137,9 +140,17 @@ def FGPTR1_training(base_model: str = None,
 
     print("Special tokenizer trained successfully")
 
-    os.makedirs("FinGPTR1_tokenizer/saved", exist_ok=True)
+    os.makedirs("FinGPTR1_tokenizer/saved/tokenizer", exist_ok=True)
+    os.makedirs("FinGPTR1_tokenizer/saved/custom_embeddings", exist_ok=True)
 
-    torch.save(Custom_Embeddings.state_dict(), embeddings_path)
+    """
+    with torch.no_grad():
+        # Update the model's embedding layer
+        embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
+    """
+    tokenizer.save_pretrained('FinGPTR1_tokenizer/saved/tokenizer')
+
+    torch.save(Custom_Embeddings.state_dict(), "FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings.pt")
     print("Tokenizer saved successfully")
 
     metadata = {
@@ -147,18 +158,7 @@ def FGPTR1_training(base_model: str = None,
         "len_vocab_added_stocks_fin": len_vocab_added_stocks_fin,
         "new_vocab_len": new_vocab_len
     }
-    with open("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json", "w") as f:
+    with open("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings_meta.json", "w") as f:
         json.dump(metadata, f)
-    
-    """
-    with torch.no_grad():
-        # Update the model's embedding layer
-        embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
-
-    # Save the personalized tokenizer
-    tokenizer.save_pretrained(tokenizer_path)
-    model.save_pretrained(tokenizer_path)
-    torch.save(Custom_Embeddings.state_dict(), embeddings_path)
 
     print("Tokenizer saved successfully")
-    """

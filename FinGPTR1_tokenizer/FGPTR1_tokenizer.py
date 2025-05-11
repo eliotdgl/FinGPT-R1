@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import os
 import json
-from transformers import LlamaTokenizer, LlamaForCausalLM
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from FinGPTR1_tokenizer.training.FinGPTR1_tokenizer_training import FGPTR1_training
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
@@ -10,8 +10,8 @@ from tokenization.preprocess_text import preprocess_text
 
 
 class FinGPTR1_Tokenizer(nn.Module):
-    def __init__(self, base_model: str = "openlm-research/open_llama_3b",
-                 embeddings_path: str = "FinGPTR1_tokenizer/saved/custom_embeddings.pt",
+    def __init__(self, base_model: str = "yiyanghkust/finbert-tone",
+                 task: str = "sentiment analysis",
                  train: bool = False):
         super(FinGPTR1_Tokenizer, self).__init__()
 
@@ -19,19 +19,19 @@ class FinGPTR1_Tokenizer(nn.Module):
         print(self.device)
 
         if not base_model:
-            base_model = "openlm-research/open_llama_3b"
-        if not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings.pt") or not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json") or train:
-            print("FinGPTR1 Tokenizer not pretrained, training from default base: openlm-research/open_llama_3b")
-            FGPTR1_training(base_model, embeddings_path, self.device)
+            base_model = "yiyanghkust/finbert-tone"
+        if not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings.pt") or not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings_meta.json") or train:
+            print("FinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone")
+            FGPTR1_training(base_model, self.device)
 
-        with open("FinGPTR1_tokenizer/saved/custom_embeddings_meta.json", "r") as f:
+        with open("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings_meta.json", "r") as f:
             metadata = json.load(f)
 
-        tokenizer = LlamaTokenizer.from_pretrained(base_model)
-        model = LlamaForCausalLM.from_pretrained(base_model).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained('FinGPTR1_tokenizer/saved/tokenizer')
+        self.model = AutoModelForSequenceClassification.from_pretrained(base_model).to(self.device)
         
-        model.resize_token_embeddings(metadata["new_vocab_len"])
-        embedding_layer = model.get_input_embeddings()
+        self.model.resize_token_embeddings(metadata["new_vocab_len"])
+        embedding_layer = self.model.get_input_embeddings()
 
         self.custom_embeddings = CustomEmbeddings(
             original_embeddings=embedding_layer,
@@ -40,8 +40,13 @@ class FinGPTR1_Tokenizer(nn.Module):
             new_vocab_len=metadata["new_vocab_len"],
             device=self.device
         ).to(self.device)
-        self.custom_embeddings.load_state_dict(torch.load(embeddings_path, map_location=self.device))
+        self.custom_embeddings.load_state_dict(torch.load("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings.pt", map_location=self.device))
         self.custom_embeddings.eval()
+
+        if task.lower() not in ["generation", "sentiment analysis"]:
+            raise ValueError(f"Unknown task: {task}. Try one of these: generation / sentiment analysis")
+        else:
+            self.task = task
 
 
     def forward(self, corpus):
@@ -49,19 +54,25 @@ class FinGPTR1_Tokenizer(nn.Module):
             corpus = [corpus]
         preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
         
-        inputs_corpus = self.tokenizer(list(preprocessed_corpus), return_tensors="pt")
+        inputs_corpus = self.tokenizer(list(preprocessed_corpus), padding=True, truncation=True, return_tensors="pt")
         input_ids_corpus = inputs_corpus["input_ids"].to(self.device)
         attention_mask = inputs_corpus["attention_mask"].to(self.device)
 
         with torch.no_grad():
-            embeddings_list = []
-            for i in range(input_ids_corpus.size(0)):
-                input_ids = input_ids_corpus[i].unsqueeze(0)
-                text_dict = corpus_numbers_dict[i]
-                
-                embeddings = self.custom_embeddings(input_ids, text_dict)
-                embeddings_list.append(embeddings)
-        
-        embeddings_batch = torch.cat(embeddings_list, dim=0)
-        
-        return embeddings_batch, attention_mask
+            embeddings_customed, _ = self.custom_embeddings(input_ids_corpus, corpus_numbers_dict)
+
+        if self.task.lower() == "generation":
+            # For generation tasks, use the model's `generate` method to create text
+            # Pass input_ids to the model and use the output
+            outputs = self.model.generate(inputs_embeds=embeddings_customed, max_length=50, num_return_sequences=1)
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            return generated_text
+
+        elif self.task.lower() == "sentiment analysis":
+            # For classification, apply the classifier head
+            outputs = self.model(inputs_embeds=embeddings_customed, attention_mask=attention_mask)
+            probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            predicted_class = torch.argmax(probs, dim=-1).item()
+            return probs, predicted_class
+    
+    pass
