@@ -47,6 +47,8 @@ class FinGPTR1_Tokenizer(nn.Module):
             raise ValueError(f"Unknown task: {task}. Try one of these: generation / sentiment analysis")
         else:
             self.task = task
+        
+        self.model.eval()
 
 
     def forward(self, corpus):
