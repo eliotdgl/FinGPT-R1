@@ -1,0 +1,35 @@
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import pipeline
+
+# Load tokenizer and model
+model_name = "yiyanghkust/finbert-tone"
+#Next step : use our own tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+#Further step : use our own RL based model
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+# Create sentiment analysis pipeline WE CAN USE IT WE OUR OWN !!
+nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+
+
+# Example text
+#With sentiment tented text, Finbert provides good results.
+text = "The company's revenue increased significantly this quarter."
+text2 = "The company's revenue decreased signifanctly this quarter."
+#For quantitatives values, it struggles.
+text3 = "The company's revenue was 9 billions last quarter and is now 2 billions."
+text4 = "The company's revenue was 2 billions last quarter and is now 9 billions."
+#Even when sentiment tented quantities such as plus, it does not provide good results with stock tickers.
+text5 = "AAPL : 211.67 +13.52 +(6.82%)"
+
+# Analyze sentiment
+result = nlp(text)
+print(result)
+result2=nlp(text2)
+print(result2)
+result3 = nlp(text3)
+print(result3)
+result4=nlp(text4)
+print(result4)
+result5=nlp(text5)
+print(result5)
