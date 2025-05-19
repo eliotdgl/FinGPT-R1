@@ -180,7 +180,7 @@ class Numbers_preprocessor:
     if space_before is None:
       space_before = ""
     if space_after is None:
-      space_before = ""
+      space_after = ""
 
     result = f"[FinNUM:{sign}{formatted_number}{order}]{dot}"
 
@@ -282,7 +282,7 @@ class Numbers_preprocessor:
       if space_before is None:
         space_before = ""
       if space_after is None:
-        space_before = ""
+        space_after = ""
 
       number = number.replace(",", "")
       if '.' in number:
