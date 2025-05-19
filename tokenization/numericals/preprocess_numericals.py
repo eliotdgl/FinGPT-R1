@@ -264,36 +264,50 @@ class Numbers_preprocessor:
     self.number_id += 1
     pass
   
-  def preprocess_to_special_tokens(text: str)->str:
-    pattern = re.compile(r"(\s?)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?(\.|\,)?((?=\s|$))")
+def preprocess_to_special_tokens(text: str)->str:
+  pattern = re.compile(r"(\s?)([+-]?)(\d{1,}(?:,\d+)*(?:\.\d+)?)(?:\s?(?i:(thousands|thousand|millions|million|billions|billion|trillions|trillion|thsnds|thsnd|thsds|thsd|mills|mill|mils|mil|mlns|mln|bills|bill|bils|bil|blns|bln|bns|bn|trills|trill|trils|tril|trlls|trll|trls|trl|k|m|b|t)))?(\.|\,|$|\s)?")
 
-    intermediate_text = ""
-    last_end = 0
+  intermediate_text = ""
+  last_end = 0
 
-    for match in pattern.finditer(text):
-      start, end = match.span()
-      intermediate_text += text[last_end:start]
-      last_end = end
+  for match in pattern.finditer(text):
+    start, end = match.span()
+    intermediate_text += text[last_end:start]
+    last_end = end
 
-      space_before, sign, number, order, dot, space_after = match.groups()
+    space_before, sign, number, order, dot = match.groups()
 
-      if dot is None:
-        dot = ""
-      if space_before is None:
-        space_before = ""
-      if space_after is None:
-        space_after = ""
+    if dot is None:
+      dot = ""
+    if space_before is None:
+      space_before = ""
 
-      number = number.replace(",", "")
-      if '.' in number:
-        int_part, dec_part = number.split('.')
-        intermediate_text += space_before + f"<SON>{sign}{len(int_part)}.{len(dec_part)}<VAL>{number}<EON>" + dot + space_after
+    number = number.replace(",", "")
+
+    if '.' in number:
+      int_part, dec_part = number.split('.')
+      if order is not None:
+        order = order.lower()
+      if order in ["thousand", "thousands", "k", "thsnds", "thsnd", "thsds", "thsd"]:
+        result_number = int_part + dec_part + "0" * (3 - len(dec_part))
+        intermediate_text += space_before + f"{sign}<SON>{len(result_number)}<VAL>{result_number}<EON>" + dot
+      elif order in ["million", "millions", "m", "mln", "mil", "mill", "mills", "mils", "mlns"]:
+        result_number = int_part + dec_part + "0" * (6 - len(dec_part))
+        intermediate_text += space_before + f"{sign}<SON>{len(result_number)}<VAL>{result_number}<EON>" + dot
+      elif order in ["billion", "billions", "b", "bn", "bln", "bil", "bill", "bills", "bils", "blns", "bns"]:
+        result_number = int_part + dec_part + "0" * (9 - len(dec_part))
+        intermediate_text += space_before + f"{sign}<SON>{len(result_number)}<VAL>{result_number}<EON>" + dot
+      elif order in ["trillion", "trillions", "t", "tn", "trills", "trill", "trils", "tril", "trlls", "trll", "trls", "trl"]:
+        result_number = int_part + dec_part + "0" * (12 - len(dec_part))
+        intermediate_text += space_before + f"{sign}<SON>{len(result_number)}<VAL>{result_number}<EON>" + dot
       else:
-        intermediate_text += space_before + f"<SON>{len(number)}<VAL>{sign}{number}<EON>" + dot + space_after
+        intermediate_text += space_before + f"{sign}<SON>{len(int_part)}.{len(dec_part)}<VAL>{number}<EON>" + dot
+    else:
+      intermediate_text += space_before + f"{sign}<SON>{len(number)}<VAL>{number}<EON>" + dot
 
-    intermediate_text += text[last_end:]
+  intermediate_text += text[last_end:]
 
-    return intermediate_text
+  return intermediate_text
 
 
   def preprocess_text(self, text: str, only_special_tokens: bool)->str:
@@ -301,7 +315,7 @@ class Numbers_preprocessor:
       Preprocess the input text by applying all formatting rules to numbers, currencies, and percentages
     """
     if only_special_tokens:
-      return preprocess_to_special_tokens(text)
+      return preprocess_to_special_tokens(text), {}
 
     else:
       self.numericals_dict = {}
