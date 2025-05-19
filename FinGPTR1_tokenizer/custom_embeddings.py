@@ -4,7 +4,7 @@ from torch import nn
 
 # Define a custom embedding module combining original model's embeddings and personalized embeddings
 class CustomEmbeddings(nn.Module):
-    def __init__(self, original_embeddings: torch, old_vocab_len: int, len_vocab_added_stocks_fin: int, new_vocab_len: int = None, device = None):
+    def __init__(self, original_embeddings: torch, old_vocab_len: int, len_vocab_added_stocks_fin: int, new_vocab_len: int = None, WithMLP: bool = True, device = None):
         super(CustomEmbeddings, self).__init__()
 
         if device is None:
@@ -12,7 +12,7 @@ class CustomEmbeddings(nn.Module):
         else:
             self.device = device
     
-
+        self.With_MLP = WithMLP
         self.original_embeddings = original_embeddings
         
         new_tokens_indices = list(range(old_vocab_len, new_vocab_len))
@@ -30,16 +30,17 @@ class CustomEmbeddings(nn.Module):
             embedding_dim=self.embedding_dim
         )
 
-        self.unit_embed = nn.Embedding(
-            num_embeddings=6, 
-            embedding_dim=2
-        )
+        if self.With_MLP:
+            self.unit_embed = nn.Embedding(
+                num_embeddings=6, 
+                embedding_dim=2
+            )
 
-        self.num_mlp = nn.Sequential(
-            nn.Linear(3, 4*self.embedding_dim),
-            nn.GELU(),
-            nn.Linear(4*self.embedding_dim, self.embedding_dim)
-        )
+            self.num_mlp = nn.Sequential(
+                nn.Linear(3, 4*self.embedding_dim),
+                nn.GELU(),
+                nn.Linear(4*self.embedding_dim, self.embedding_dim)
+            )
 
         # Randomly initialize new embeddings according to original embeddings
         mean = self.original_embeddings.weight[:old_vocab_len].mean(dim=0)
@@ -102,14 +103,17 @@ class CustomEmbeddings(nn.Module):
             
             embeddings_from_emblayer = self.new_embeddings_layer(selected_ids)
 
-            num_features = self.enhance_num_dict(num_dict)
-            num_features = num_features.view(-1, num_features.shape[-1])
-            
-            embeddings_from_mlp = self.num_mlp(num_features)
-            embeddings_from_mlp = embeddings_from_mlp.view(-1, self.embedding_dim)
+            if self.With_MLP:
+                num_features = self.enhance_num_dict(num_dict)
+                num_features = num_features.view(-1, num_features.shape[-1])
+                
+                embeddings_from_mlp = self.num_mlp(num_features)
+                embeddings_from_mlp = embeddings_from_mlp.view(-1, self.embedding_dim)
 
-            embeddings[masked_num_embeddings.view(-1)] = embeddings_from_emblayer + embeddings_from_mlp
-        
+                embeddings[masked_num_embeddings.view(-1)] = embeddings_from_emblayer + embeddings_from_mlp
+            else:
+                embeddings[masked_num_embeddings.view(-1)] = embeddings_from_emblayer
+
         embeddings = embeddings.view(batch_dim, inputs_dim, self.embedding_dim)
 
         return embeddings, trainable

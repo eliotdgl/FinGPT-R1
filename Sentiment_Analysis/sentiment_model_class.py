@@ -1,7 +1,7 @@
 import torch
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification,
-    Trainer, TrainingArguments
+    Trainer, TrainingArguments, AutoConfig
 )
 from datasets import Dataset
 import numpy as np
@@ -11,14 +11,11 @@ import pandas as pd
 import datetime
 import glob
 import shutil
-<<<<<<< HEAD
 import torch.nn.functional as F
-=======
-
->>>>>>> 7f486e595270fbc6a0a4d96143501799d382764a
+from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
 
 class Sentiment_Analysis_Model:
-    def __init__(self, model_name="bert-base-uncased", label_map=None, load_model=False):
+    def __init__(self, model_name="bert-base-uncased", label_map=None, load_model=False, num_label=3):
         self.label_map = label_map or {-1: 0, 0: 1, 1: 2}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
         self.model_name = model_name
@@ -32,11 +29,17 @@ class Sentiment_Analysis_Model:
             self.tokenizer = None
             self.model = None
         print("Model initialized intern.")
-<<<<<<< HEAD
+        lora_config=LoraConfig(
+            r=8,
+            lora_alpha=32,
+            target_modules=["query", "value"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type=TaskType.SEQ_CLS
+        )
+        self.model=get_peft_model(self.model,lora_config)
 
-=======
         
->>>>>>> 7f486e595270fbc6a0a4d96143501799d382764a
     def prepare_dataset(self, raw_input):
         # Load raw data
         if isinstance(raw_input, list) and len(raw_input) == 2:
@@ -105,30 +108,32 @@ class Sentiment_Analysis_Model:
         )
 
         trainer.train()
-
     def save(self, base_path="./sft-sentiment-model", timestamp_name=None, keep_last=3):
         print("Saving model")
+
     # 1. Create custom timestamp or use default
         if timestamp_name is None:
             timestamp_name = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # 2. Create versioned save directory with custom timestamp name
+
+    # 2. Create versioned save directory
         save_path = f"{base_path}_{timestamp_name}"
         os.makedirs(save_path, exist_ok=True)
 
     # 3. Save model and tokenizer
-        self.model.save_pretrained(save_path)
+        if isinstance(self.model, PeftModel):
+            self.model.base_model.save_pretrained(save_path)  # Save full model
+            self.model.save_pretrained(save_path)              # Save adapters
+        else:
+            self.model.save_pretrained(save_path)
+
         self.tokenizer.save_pretrained(save_path)
         print(f"Model saved to: {save_path}")
 
-    # 4. Find and sort existing versions
+    # 4. Delete old saved versions
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
-
-    # 5. Delete older ones if exceeding keep_last
         if len(saved_versions) > keep_last:
-            to_delete = saved_versions[keep_last:]
-            for old_path in to_delete:
+            for old_path in saved_versions[keep_last:]:
                 try:
                     shutil.rmtree(old_path)
                     print(f"Deleted old model directory: {old_path}")
@@ -136,24 +141,38 @@ class Sentiment_Analysis_Model:
                     print(f"Warning: Could not delete {old_path}: {e}")
 
     def load(self, base_path="./sentiment_model"):
-    # 1. Find the most recent directory
+    # 1. Locate the most recent version
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
-    
+
         if not saved_versions:
             raise FileNotFoundError(f"No saved model found at {base_path}")
 
         latest_version = saved_versions[0]
         print(f"Loading the latest model from: {latest_version}")
 
-    # 2. Load model and tokenizer
+    # 2. Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(latest_version)
-        self.model = AutoModelForSequenceClassification.from_pretrained(latest_version)
 
+    # 3. Load model with correct number of labels
+        config = AutoConfig.from_pretrained(latest_version)
+        config.num_labels = len(self.label_map)  # ensure label count is correct
+        self.model = AutoModelForSequenceClassification.from_pretrained(latest_version, config=config)
+
+    # 4. Re-apply PEFT LoRA wrapping
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=32,
+            target_modules=["query", "value"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type=TaskType.SEQ_CLS
+        )
+        self.model = get_peft_model(self.model, lora_config)
+        print("Model successfully loaded and LoRA applied.")
     def predict(self, text):
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Model is not loaded. Call load() first.")
-<<<<<<< HEAD
     
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     
@@ -170,11 +189,3 @@ class Sentiment_Analysis_Model:
 
         return probabilities, pred_label
         
-=======
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
-        with torch.no_grad():
-            logits = self.model(**inputs).logits
-        pred_id = torch.argmax(logits, dim=1).item()
-        return {0: "negative", 1: "neutral", 2: "positive"}[pred_id]
-
->>>>>>> 7f486e595270fbc6a0a4d96143501799d382764a

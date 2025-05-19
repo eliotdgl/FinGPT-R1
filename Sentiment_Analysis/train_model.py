@@ -3,7 +3,7 @@ from controlled_environment import TextDataGenerator
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import os
-csv_path = r"FinGPT-R1\data\sentiment_analysis_train\FinancialPhraseBank-v1.0\Sentences_AllAgree_processed.csv"
+csv_path = r"data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv"
 
 df=pd.read_csv(csv_path)
 # Split into train and test sets (e.g., 80% train, 20% test)

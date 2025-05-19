@@ -10,7 +10,8 @@ from tokenization.preprocess_text import preprocess_text
 
 
 class FinGPTR1_Tokenizer(nn.Module):
-    def __init__(self, base_model: str = "yiyanghkust/finbert-tone",
+    def __init__(self, PATH: str,
+                base_model: str = "yiyanghkust/finbert-tone",
                  task: str = "sentiment analysis",
                  train: bool = False):
         super(FinGPTR1_Tokenizer, self).__init__()
@@ -20,27 +21,32 @@ class FinGPTR1_Tokenizer(nn.Module):
 
         if not base_model:
             base_model = "yiyanghkust/finbert-tone"
-        if not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings.pt") or not os.path.exists("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings_meta.json") or train:
+        if not os.path.exists(PATH + "/custom_embeddings/custom_embeddings.pt") or not os.path.exists(PATH + "/custom_embeddings/custom_embeddings_meta.json") or train:
             print("FinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone")
-            FGPTR1_training(base_model, self.device)
+            FGPTR1_training(PATH, base_model, self.device)
 
-        with open("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings_meta.json", "r") as f:
+        with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "r") as f:
             metadata = json.load(f)
 
-        self.tokenizer = AutoTokenizer.from_pretrained('FinGPTR1_tokenizer/saved/tokenizer')
-        self.model = AutoModelForSequenceClassification.from_pretrained(base_model).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(PATH + '/tokenizer')
+        self.model = AutoModelForSequenceClassification.from_pretrained(PATH + '/model').to(self.device)
         
-        self.model.resize_token_embeddings(metadata["new_vocab_len"])
         embedding_layer = self.model.get_input_embeddings()
+        
+        if 'NoMLP' in PATH:
+            self.With_MLP = False
+        else:
+            self.With_MLP = True
 
         self.custom_embeddings = CustomEmbeddings(
             original_embeddings=embedding_layer,
             old_vocab_len=metadata["old_vocab_len"],
             len_vocab_added_stocks_fin=metadata["len_vocab_added_stocks_fin"],
             new_vocab_len=metadata["new_vocab_len"],
+            WithMLP = self.With_MLP,
             device=self.device
         ).to(self.device)
-        self.custom_embeddings.load_state_dict(torch.load("FinGPTR1_tokenizer/saved/custom_embeddings/custom_embeddings.pt", map_location=self.device))
+        self.custom_embeddings.load_state_dict(torch.load(PATH + "/custom_embeddings/custom_embeddings.pt", map_location=self.device))
         self.custom_embeddings.eval()
 
         if task.lower() not in ["generation", "sentiment analysis"]:
@@ -78,3 +84,25 @@ class FinGPTR1_Tokenizer(nn.Module):
             return probs, predicted_class
     
     pass
+
+
+    def tokenize(self, corpus):
+        if isinstance(corpus, str):
+            corpus = [corpus]
+        preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
+        
+        return self.tokenizer(list(preprocessed_corpus), padding=True, truncation=True, return_tensors="pt")
+        
+
+    def get_embeddings(self, corpus):
+        if isinstance(corpus, str):
+            corpus = [corpus]
+        preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
+        
+        inputs_corpus = self.tokenizer(list(preprocessed_corpus), padding=True, truncation=True, return_tensors="pt")
+        input_ids_corpus = inputs_corpus["input_ids"].to(self.device)
+
+        with torch.no_grad():
+            embeddings_customed, _ = self.custom_embeddings(input_ids_corpus, corpus_numbers_dict)
+
+        return embeddings_customed

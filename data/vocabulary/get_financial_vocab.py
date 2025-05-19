@@ -1,25 +1,30 @@
 financial_vocab = [
     # Market Sentiment - Positive (Bullish)
-    "bullish", "rally", "breakout", "uptrend",
-    "gain", "surge", "rebound", "momentum",
+    #"bullish", "rally", "breakout",
+    "uptrend",
+    #"gain", "surge", "rebound", "momentum",
 
     # Market Sentiment - Negative (Bearish)
-    "bearish", "crash", "correction", "downtrend",
-    "plunge", "dip", "volatility",
+    #"bearish",
+    "crash",
+    #"correction", 
+    "downtrend", "plunge",
+    #"dip", "volatility",
 
     # Financial Instruments / Assets
-    "equity", "bond", "etf", "futures",
-    "crypto", "commodity", "BTC", "bitcoin", "etherum"
+    #"equity", "bond", "etf", "futures",
+    "crypto", 
+    #"commodity",
+    "BTC", "bitcoin", "etherum"
 
     # Economic / Market Indicators
-    "inflation", "gdp",
-    "valuation", "liquidity",
-    "recession", "unemployment", "cpi", "pmi", "pct", "ppi"
+    "inflation",
+    #"gdp", "valuation", "liquidity", "recession", "unemployment", "cpi", "pmi", "pct",
+    "ppi"
 
     # Sentiment & Analyst Language
-    "outperform", "underperform",
-    "upside", "guidance", "speculation", "sentiment",
-    "confidence", "uncertainty",
+    "outperform",
+    #"underperform", "upside", "guidance", "speculation", "sentiment", "confidence", "uncertainty",
 
     "Q1", "Q2", "Q3", "Q4"
 ]
