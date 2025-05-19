@@ -1,6 +1,7 @@
 # Core dependencies
 pandas
 numpy
+scikit-learn
 #requests
 #requests-html
 #beautifulsoup4
@@ -25,5 +26,5 @@ huggingface_hub
 
 #RL environment
 gym
-sklearn
+peft
 random
