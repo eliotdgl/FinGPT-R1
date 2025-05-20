@@ -11,10 +11,5 @@ with open('data/local_data/dataset_train_all_agree.pkl', 'rb') as f:
 sentiment_model = Sentiment_Analysis_Model()
 sentiment_model.train(dataset_train_all_agree)
 sentiment_model.save(base_path="./sentiment_model_test_1", timestamp_name="test_1", keep_last=3)
-"""generator=TextDataGenerator()
-data=generator.generate_batch()
-sentiment_model = Sentiment_Analysis_Model()
-dataset = sentiment_model.prepare_dataset(data)
-sentiment_model.train(dataset)
-sentiment_model.save(base_path="./sentiment_model_test_1", timestamp_name="test_1", keep_last=3)"""
+
 

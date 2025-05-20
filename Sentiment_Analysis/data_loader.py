@@ -90,3 +90,32 @@ with open(pkl_path, 'wb') as f:
 pkl_path_test = os.path.join('data', 'local_data', 'dataset_test_66_agree.pkl')
 with open(pkl_path_test, 'wb') as f:
     pickle.dump(test_df_66_agree, f)
+
+""" Load and preprocessed FinancialPhraseBank-v1.0 50 agree"""
+
+csv_path_50_agree = "data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_50Agree_processed.csv"
+
+train_df_50_agree, test_df_50_agree = get_train_test_split(csv_path_50_agree)
+train_df_50_agree.to_csv('data/local_data/train_50_agree.csv', index=False)
+test_df_50_agree.to_csv('data/local_data/test_50_agree.csv', index=False)
+
+# Initialize and train the model without saving any CSV
+sentiment_model = Sentiment_Analysis_Model()
+dataset_train_50_agree = sentiment_model.prepare_dataset('data/local_data/test_50_agree.csv') 
+
+# Save local data
+pkl_path = os.path.join('data', 'local_data', 'dataset_train_50_agree.pkl')
+with open(pkl_path, 'wb') as f:
+    pickle.dump(dataset_train_50_agree, f)
+
+pkl_path_test = os.path.join('data', 'local_data', 'dataset_test_50_agree.pkl')
+with open(pkl_path_test, 'wb') as f:
+    pickle.dump(test_df_50_agree, f)
+
+generator=TextDataGenerator()
+generated_data=generator.generate_batch()
+
+
+pkl_path = os.path.join('data', 'local_data', 'generated_data.pkl')
+with open(pkl_path, 'wb') as f:
+    pickle.dump(generated_data, f)
