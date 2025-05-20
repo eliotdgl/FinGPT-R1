@@ -2,8 +2,8 @@
 from tokenization.stock_tickers.preprocess_stock_tickers import preprocess_stocks
 from tokenization.numericals.preprocess_numericals import Numbers_preprocessor
 
-def preprocess_text(text: str)->str:
+def preprocess_text(text: str, only_special_tokens: bool = False)->str:
     preprocessed_text = preprocess_stocks(text)
-    preprocessed_text, numbers_dict = Numbers_preprocessor().preprocess_text(preprocessed_text)
+    preprocessed_text, numbers_dict = Numbers_preprocessor().preprocess_text(preprocessed_text, only_special_tokens)
     
     return preprocessed_text, numbers_dict
