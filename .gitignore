@@ -1,0 +1,6 @@
+FinGPTR1_env/
+__pycache__/
+data/nifty_data_set_local/
+sft-sentiment-model/
+sentiment_model_test_1_test_1/
+data/local_data/

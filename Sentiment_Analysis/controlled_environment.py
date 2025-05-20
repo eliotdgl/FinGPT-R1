@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 class TextDataGenerator:
-    def __init__(self, n_classes=3, samples_per_episode=100):
+    def __init__(self, n_classes=3, samples_per_episode=1000, number_of_episode=1):
         self.n_classes = n_classes
         self.samples_per_episode = samples_per_episode
         self.templates_one_number = {
@@ -121,9 +121,10 @@ class TextDataGenerator:
     def generate_batch(self):
         texts = []
         labels = []
-        for _ in range(self.samples_per_episode):
-            text,label = self.generate_sentence()
-            texts.append(text)
-            labels.append(label)
+        for _ in range(self.number_of_episode):
+            for _ in range(self.samples_per_episode):
+                text,label = self.generate_sentence()
+                texts.append(text)
+                labels.append(label)
         return [texts, labels]
 generator=TextDataGenerator()
