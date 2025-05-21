@@ -80,10 +80,7 @@ class Sentiment_Analysis_Model:
     def train(self, dataset_splits, output_dir="Sentiment_Analysis/models/sft-sentiment-model", epochs=3, batch_size=8):
         print("\nTraining started\n")
         if not self.model or not self.tokenizer:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForSequenceClassification.from_pretrained(
-                self.model_name, num_labels=len(self.label_map)
-            )
+            raise RuntimeError("\nModel is not loaded/initialized. Call load() first or initialize a new one.\n")
 
         training_args = TrainingArguments(
             output_dir=output_dir,
