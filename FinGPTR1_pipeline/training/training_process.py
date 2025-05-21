@@ -4,10 +4,12 @@ import os
 import json
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
-from tokenization.preprocess_text import preprocess_text
-from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
 from torch.utils.data import DataLoader
+
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
+from tokenization.preprocess_text import preprocess_text
 
 
 def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device):
@@ -68,7 +70,7 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
         
         scheduler.step()
         val_loss = evaluate(model, custom_embeddings, val_loader, tokenizer, device)
-        print(f"Training Tokenizer with the {n}th layers unfrozen | Epoch {epoch+1} training loss: {epoch_loss} / val loss: {val_loss}")
+        print(f"\nTraining Tokenizer with the {n}th layers unfrozen | Epoch {epoch+1} training loss: {epoch_loss} / val loss: {val_loss}")
 
 
 
@@ -83,7 +85,7 @@ def FGPTR1_training(PATH: str,
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print('\nImporting base tokenizer and model')
+    print('\nImporting base tokenizer and model\n')
     # Load base tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(base_model)
     model = AutoModelForSequenceClassification.from_pretrained(base_model).to(device)
@@ -181,7 +183,7 @@ def FGPTR1_training(PATH: str,
 
     FGPTR1_training_loop(model, tokenizer, Custom_Embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device)
 
-    print("Special tokenizer trained successfully")
+    print("\nSpecial tokenizer trained successfully\n")
 
     os.makedirs(PATH + "/tokenizer", exist_ok=True)
     os.makedirs(PATH + "/model", exist_ok=True)
@@ -205,7 +207,7 @@ def FGPTR1_training(PATH: str,
     with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "w") as f:
         json.dump(metadata, f)
 
-    print(f"FinGPTR1 Model saved successfully: {PATH}")
+    print(f"\nFinGPTR1 Model saved successfully: {PATH}\n")
 
 
 def unfreeze_last_n_layers(model, n=0):

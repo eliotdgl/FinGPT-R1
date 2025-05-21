@@ -4,8 +4,8 @@ import os
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from FinGPTR1_pipeline.training.training_process import FGPTR1_training
-from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
+from training.training_process import FGPTR1_training
+from custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
 
@@ -27,7 +27,7 @@ class FinGPTR1_Tokenizer(nn.Module):
         if not base_model:
             base_model = "yiyanghkust/finbert-tone"
         if not os.path.exists(PATH + "/custom_embeddings/custom_embeddings.pt") or not os.path.exists(PATH + "/custom_embeddings/custom_embeddings_meta.json") or train:
-            print("FinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone")
+            print("\nFinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone\n")
             FGPTR1_training(PATH, base_model, self.With_MLP, self.device)
 
         with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "r") as f:
