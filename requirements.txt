@@ -27,6 +27,3 @@ huggingface_hub
 #RL environment
 #gym
 peft
-
-#data_loader
-pickle
