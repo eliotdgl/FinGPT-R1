@@ -15,7 +15,7 @@ PATH = 'FinGPTR1_pipeline/models/NoMLP'
 #PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
 
 Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train = True)
-print("FinGPTR1 tokenizer loaded")
+print("\nFinGPTR1 tokenizer loaded\n")
 
 text = ["This is a news with +$10M in stock"]
 

@@ -77,8 +77,8 @@ class Sentiment_Analysis_Model:
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-    def train(self, dataset_splits, output_dir="./sft-sentiment-model", epochs=3, batch_size=8):
-        print("Training started")
+    def train(self, dataset_splits, output_dir="Sentiment_Analysis/models/sft-sentiment-model", epochs=3, batch_size=8):
+        print("\nTraining started\n")
         if not self.model or not self.tokenizer:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -110,8 +110,8 @@ class Sentiment_Analysis_Model:
         )
 
         trainer.train()
-    def save(self, base_path="./sft-sentiment-model", timestamp_name=None, keep_last=3):
-        print("Saving model")
+    def save(self, base_path="Sentiment_Analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
+        print("\nSaving model\n")
 
     # 1. Create custom timestamp or use default
         if timestamp_name is None:
@@ -129,7 +129,7 @@ class Sentiment_Analysis_Model:
             self.model.save_pretrained(save_path)
 
         self.tokenizer.save_pretrained(save_path)
-        print(f"Model saved to: {save_path}")
+        print(f"\nModel saved to: {save_path}\n")
 
     # 4. Delete old saved versions
         pattern = base_path + "_*"
@@ -138,20 +138,20 @@ class Sentiment_Analysis_Model:
             for old_path in saved_versions[keep_last:]:
                 try:
                     shutil.rmtree(old_path)
-                    print(f"Deleted old model directory: {old_path}")
+                    print(f"\nDeleted old model directory: {old_path}\n")
                 except Exception as e:
-                    print(f"Warning: Could not delete {old_path}: {e}")
+                    print(f"\nWarning: Could not delete {old_path}: {e}\n")
 
-    def load(self, base_path="./sentiment_model"):
+    def load(self, base_path="Sentiment_Analysis/models/sentiment_model"):
     # 1. Locate the most recent version
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
 
         if not saved_versions:
-            raise FileNotFoundError(f"No saved model found at {base_path}")
+            raise FileNotFoundError(f"\nNo saved model found at {base_path}\n")
 
         latest_version = saved_versions[0]
-        print(f"Loading the latest model from: {latest_version}")
+        print(f"\nLoading the latest model from: {latest_version}\n")
 
     # 2. Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(latest_version)
@@ -171,11 +171,11 @@ class Sentiment_Analysis_Model:
             task_type=TaskType.SEQ_CLS
         )
         self.model = get_peft_model(self.model, lora_config)
-        print("Model successfully loaded and LoRA applied.")
+        print("\nModel successfully loaded and LoRA applied.\n")
 
     def predict(self, text):
         if self.model is None or self.tokenizer is None:
-            raise RuntimeError("Model is not loaded. Call load() first.")
+            raise RuntimeError("\nModel is not loaded. Call load() first.\n")
     
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     

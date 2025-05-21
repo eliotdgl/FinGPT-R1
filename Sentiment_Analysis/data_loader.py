@@ -11,7 +11,7 @@ def get_train_test_split(data, test_size=0.2, random_state=42):
     elif isinstance(data, pd.DataFrame):
         df = data
     else:
-        raise ValueError("Input must be a file path or a DataFrame")
+        raise ValueError("\nInput must be a file path or a DataFrame\n")
 
     return train_test_split(df, test_size=test_size, random_state=random_state)
 
