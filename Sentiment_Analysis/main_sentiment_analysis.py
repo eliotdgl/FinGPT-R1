@@ -1,11 +1,8 @@
 from sentiment_model_class import Sentiment_Analysis_Model  # Import the class from new_model.py
 from data_loader import get_train_test_split
 
-csv_path = "data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv"
-train_df, test_df = get_train_test_split(csv_path)
 
-# Now you can use test_df
-print(test_df.head())
+
 # Initialize the sentiment analysis model
 sentiment_model = Sentiment_Analysis_Model(load_model=True)
 print("Model initialized out.")
