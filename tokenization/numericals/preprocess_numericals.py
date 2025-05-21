@@ -310,7 +310,7 @@ class Numbers_preprocessor:
     return intermediate_text
 
 
-  def preprocess_text(self, text: str, only_special_tokens: bool)->str:
+  def preprocess_text(self, text: str, only_special_tokens: bool = False)->str:
     """
       Preprocess the input text by applying all formatting rules to numbers, currencies, and percentages
     """

@@ -15,6 +15,7 @@ PATH = 'FinGPTR1_pipeline/models/NoMLP'
 #PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
 
 Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train = True)
+"""
 print("\nFinGPTR1 tokenizer loaded\n")
 
 text = ["This is a news with +$10M in stock"]
@@ -34,3 +35,4 @@ print('Embeddings: ', Fin_tokenizer.get_embeddings(text))
 print('Predict: ', Fin_tokenizer(text))
 
 print("Results printed")
+"""

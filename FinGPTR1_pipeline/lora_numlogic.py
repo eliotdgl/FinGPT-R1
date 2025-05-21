@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset
+from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -7,6 +8,7 @@ from transformers import (
     TrainingArguments
 )
 from peft import get_peft_model, LoraConfig, TaskType
+import re
 
 import sys
 import os
@@ -29,32 +31,31 @@ base_model.config.pad_token_id = base_tokenizer.pad_token_id
 base_model.resize_token_embeddings(len(base_tokenizer))
 
 
-raw_data = [
-    "The company earned 42.15 million dollars last year.",
-    "The population is approximately 7.8 billion people.",
-    "Stock prices rose by +7.5% in Q1."
-]
-processed_data = [preprocess_text(text, only_special_tokens = True) for text in raw_data]
+raw_data = load_dataset(
+    'csv',
+    data_files='data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv'
+)
+dataset = raw_data['train']
 
 
-# === Step 4: Dataset ===
-class SimpleDataset(Dataset):
-    def __init__(self, texts, tokenizer):
-        self.tokenizer = tokenizer
-        self.data = texts
+def contains_numbers(example):
+    return bool(re.search(r'\d', example['Sentence']))
 
-    def __len__(self):
-        return len(self.data)
+filtered_dataset = dataset.filter(contains_numbers)
+print(f"Filtered dataset size: {len(filtered_dataset)}")
 
-    def __getitem__(self, idx):
-        enc = self.tokenizer(self.data[idx], return_tensors="pt", padding="max_length", truncation=True, max_length=128)
-        input_ids = enc["input_ids"].squeeze()
-        attention_mask = enc["attention_mask"].squeeze()
-        labels = input_ids.clone()
-        return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
+def add_special_tokens(example):
+    return {"text": preprocess_text(example["Sentence"], only_special_tokens=True)}
 
-dataset = SimpleDataset(processed_data, base_tokenizer)
+processed_data = filtered_dataset.map(add_special_tokens)
 
+def tokenize(example):
+    enc = base_tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
+    enc["labels"] = enc["input_ids"].copy()
+    return enc
+
+tokenized_dataset = processed_data.map(tokenize, remove_columns=["text"])
+tokenized_dataset.set_format("torch")
 
 # LoRA config: adjust rank, alpha, dropout as needed
 lora_config = LoraConfig(
@@ -92,7 +93,7 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=dataset,
+    train_dataset=tokenized_dataset,
     tokenizer=base_tokenizer
 )
 
@@ -101,5 +102,7 @@ trainer = Trainer(
 trainer.train()
 
 # 9. Save
-trainer.save_model("FinGPTR1_pipeline/models/lora_numlogic/model")
+full_model = model.merge_and_unload()
+
+full_model.save_pretrained("FinGPTR1_pipeline/models/lora_numlogic/model")
 base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/lora_numlogic/tokenizer")
