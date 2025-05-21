@@ -4,7 +4,7 @@ import os
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from FinGPTR1_tokenizer.training.FinGPTR1_tokenizer_training import FGPTR1_training
+from FinGPTR1_tokenizer.training.training_process import FGPTR1_training
 from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
@@ -19,11 +19,16 @@ class FinGPTR1_Tokenizer(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(self.device)
 
+        if 'NoMLP' in PATH:
+            self.With_MLP = False
+        else:
+            self.With_MLP = True
+
         if not base_model:
             base_model = "yiyanghkust/finbert-tone"
         if not os.path.exists(PATH + "/custom_embeddings/custom_embeddings.pt") or not os.path.exists(PATH + "/custom_embeddings/custom_embeddings_meta.json") or train:
             print("FinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone")
-            FGPTR1_training(PATH, base_model, self.device)
+            FGPTR1_training(PATH, base_model, self.With_MLP, self.device)
 
         with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "r") as f:
             metadata = json.load(f)
@@ -32,11 +37,6 @@ class FinGPTR1_Tokenizer(nn.Module):
         self.model = AutoModelForSequenceClassification.from_pretrained(PATH + '/model').to(self.device)
         
         embedding_layer = self.model.get_input_embeddings()
-        
-        if 'NoMLP' in PATH:
-            self.With_MLP = False
-        else:
-            self.With_MLP = True
 
         self.custom_embeddings = CustomEmbeddings(
             original_embeddings=embedding_layer,
@@ -83,7 +83,7 @@ class FinGPTR1_Tokenizer(nn.Module):
             predicted_class = torch.argmax(probs, dim=-1).item()
             return probs, predicted_class
     
-    pass
+        pass
 
 
     def tokenize(self, corpus):

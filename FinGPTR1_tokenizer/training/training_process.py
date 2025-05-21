@@ -74,6 +74,7 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
 
 def FGPTR1_training(PATH: str,
                     base_model: str = "yiyanghkust/finbert-tone",
+                    With_MLP: bool = False,
                     device = None):
     """
     This function is the entry point for training the FinGPTR1 tokenizer.
@@ -103,7 +104,7 @@ def FGPTR1_training(PATH: str,
     with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
         num_tokens = json.load(f)
         # Load financial vocabulary
-    with open("data/vocabulary/financial_vocab.json", "r") as f:
+    with open("tokenization/vocabulary/financial_vocab.json", "r") as f:
         financial_tokens = json.load(f)
 
     
@@ -136,11 +137,6 @@ def FGPTR1_training(PATH: str,
 
     # Get embedding layer of Llama model
     embedding_layer = model.get_input_embeddings()
-    
-    if 'NoMLP' in PATH:
-        With_MLP = False
-    else:
-        With_MLP = True
 
     Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, len_vocab_added_stocks_fin, new_vocab_len, With_MLP, device).to(device)
 

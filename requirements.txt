@@ -10,7 +10,7 @@ scikit-learn
 
 # Text and NLP
 regex
-transformers==4.50.3
+transformers==4.51.3    #==4.50.3
 sentencepiece
 torch
 

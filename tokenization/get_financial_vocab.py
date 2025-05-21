@@ -35,6 +35,6 @@ import json
 import os
 
 if __name__ == "__main__":
-    os.makedirs("data/vocabulary", exist_ok=True)
-    with open("data/vocabulary/financial_vocab.json", "w") as f:
+    os.makedirs("tokenization/vocabulary", exist_ok=True)
+    with open("tokenization/vocabulary/financial_vocab.json", "w") as f:
         json.dump(list(financial_vocab), f)
