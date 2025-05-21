@@ -6,7 +6,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from tokenization.preprocess_text import preprocess_text
-from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
+from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
 from torch.utils.data import DataLoader
 
 

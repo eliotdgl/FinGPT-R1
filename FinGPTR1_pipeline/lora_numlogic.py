@@ -112,5 +112,5 @@ trainer = Trainer(
 trainer.train()
 
 # 9. Save
-trainer.save_model("FinGPTR1_tokenizer/models/lora_numlogic_model/model")
-base_tokenizer.save_pretrained("FinGPTR1_tokenizer/models/lora_numlogic_model/tokenizer")
+trainer.save_model("FinGPTR1_pipeline/models/lora_numlogic_model/model")
+base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/lora_numlogic_model/tokenizer")

@@ -4,8 +4,8 @@ import os
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from FinGPTR1_tokenizer.training.training_process import FGPTR1_training
-from FinGPTR1_tokenizer.custom_embeddings import CustomEmbeddings
+from FinGPTR1_pipeline.training.training_process import FGPTR1_training
+from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
 

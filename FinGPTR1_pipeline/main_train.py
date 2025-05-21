@@ -1,4 +1,4 @@
-from FGPTR1_tokenizer import FinGPTR1_Tokenizer
+from FinGPTR1_pipeline.FGPTR1_tokenizer import FinGPTR1_Tokenizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
@@ -8,11 +8,11 @@ tokenizer = AutoTokenizer.from_pretrained(base_model)
 model = AutoModelForSequenceClassification.from_pretrained(base_model)
 
 
-#PATH = 'FinGPTR1_tokenizer/models/Base'
-PATH = 'FinGPTR1_tokenizer/models/NoMLP'
-#PATH = 'FinGPTR1_tokenizer/models/NoMLPandGradUnfreeze'
-#PATH = 'FinGPTR1_tokenizer/models/AllCustom'
-#PATH = 'FinGPTR1_tokenizer/models/AllCustomandGradUnfreeze'
+#PATH = 'FinGPTR1_pipeline/models/Base'
+PATH = 'FinGPTR1_pipeline/models/NoMLP'
+#PATH = 'FinGPTR1_pipeline/models/NoMLPandGradUnfreeze'
+#PATH = 'FinGPTR1_pipeline/models/AllCustom'
+#PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
 
 Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train = True)
 print("FinGPTR1 tokenizer loaded")
