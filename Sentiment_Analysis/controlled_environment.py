@@ -9,6 +9,7 @@ class TextDataGenerator:
     def __init__(self, n_classes=3, samples_per_episode=1000, number_of_episode=1):
         self.n_classes = n_classes
         self.samples_per_episode = samples_per_episode
+        self.number_of_episode = number_of_episode
         self.templates_one_number = {
             #phrases with neutral sentiment with one number
             0: ["{} keeps the price target at {}.",
