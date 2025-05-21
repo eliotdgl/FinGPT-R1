@@ -1,3 +1,0 @@
-tagert_modules=[attention_based, outpu_dense]
-use it for SFT
-Output of model for controlled environment: sigmoid between -1 and 1

@@ -18,26 +18,28 @@ class Sentiment_Analysis_Model:
     def __init__(self, model_name="bert-base-uncased", label_map=None, load_model=False, num_label=3):
         self.label_map = label_map or {-1: 0, 0: 1, 1: 2}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
+        self.label_names = ["negative", "neutral", "positive"]
+
         self.model_name = model_name
 
         if not load_model:
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                model_name, num_labels=len(self.label_map)
+            model_name, num_labels=len(self.label_map)
             )
+            lora_config = LoraConfig(
+                r=8,
+                lora_alpha=32,
+                target_modules=["query", "value"],
+                lora_dropout=0.05,
+                bias="none",
+                task_type=TaskType.SEQ_CLS
+            )
+            self.model = get_peft_model(self.model, lora_config)  # Only wrap here
         else:
             self.tokenizer = None
             self.model = None
-        print("Model initialized intern.")
-        lora_config=LoraConfig(
-            r=8,
-            lora_alpha=32,
-            target_modules=["query", "value"],
-            lora_dropout=0.05,
-            bias="none",
-            task_type=TaskType.SEQ_CLS
-        )
-        self.model=get_peft_model(self.model,lora_config)
+
 
         
     def prepare_dataset(self, raw_input):
@@ -85,7 +87,7 @@ class Sentiment_Analysis_Model:
 
         training_args = TrainingArguments(
             output_dir=output_dir,
-            evaluation_strategy="epoch",
+            eval_strategy="epoch",
             save_strategy="epoch",
             per_device_train_batch_size=batch_size,
             num_train_epochs=epochs,
@@ -170,6 +172,7 @@ class Sentiment_Analysis_Model:
         )
         self.model = get_peft_model(self.model, lora_config)
         print("Model successfully loaded and LoRA applied.")
+
     def predict(self, text):
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Model is not loaded. Call load() first.")
