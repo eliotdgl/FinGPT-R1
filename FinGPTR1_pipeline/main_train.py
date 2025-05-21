@@ -1,4 +1,4 @@
-from FinGPTR1_pipeline.FGPTR1_tokenizer import FinGPTR1_Tokenizer
+from FGPTR1_tokenizer import FinGPTR1_Tokenizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
