@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
 
 class Sentiment_Analysis_Model:
-    def __init__(self, model_name="bert-base-uncased", label_map=None, load_model=False, num_label=3):
+    def __init__(self, model_name="bert-base-uncased", tokenizer_name=None, label_map=None, load_model=False, num_label=3):
         self.label_map = label_map or {-1: 0, 0: 1, 1: 2}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
         self.label_names = ["negative", "neutral", "positive"]
@@ -23,10 +23,14 @@ class Sentiment_Analysis_Model:
         self.model_name = model_name
 
         if not load_model:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_name, num_labels=len(self.label_map)
-            )
+            model_name, num_labels=len(self.label_map))
+            if tokenizer_name is None:
+                self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            else:
+                self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+            
+            
             lora_config = LoraConfig(
                 r=8,
                 lora_alpha=32,
