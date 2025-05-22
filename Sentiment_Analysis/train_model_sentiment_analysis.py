@@ -1,5 +1,8 @@
-from sentiment_model_class import Sentiment_Analysis_Model
-from controlled_environment import TextDataGenerator
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from Sentiment_Analysis.sentiment_model_class import Sentiment_Analysis_Model
+from Sentiment_Analysis.controlled_environment import TextDataGenerator
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import os

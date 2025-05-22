@@ -1,4 +1,7 @@
-from FGPTR1_tokenizer import FinGPTR1_Tokenizer
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from FinGPTR1_pipeline.FGPTR1_tokenizer import FinGPTR1_Tokenizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
@@ -14,8 +17,8 @@ PATH = 'FinGPTR1_pipeline/models/NoMLP'
 #PATH = 'FinGPTR1_pipeline/models/AllCustom'
 #PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
 
-Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train = True)
-"""
+Fin_tokenizer = FinGPTR1_Tokenizer(PATH)
+
 print("\nFinGPTR1 tokenizer loaded\n")
 
 text = ["This is a news with +$10M in stock"]
@@ -35,4 +38,3 @@ print('Embeddings: ', Fin_tokenizer.get_embeddings(text))
 print('Predict: ', Fin_tokenizer(text))
 
 print("Results printed")
-"""

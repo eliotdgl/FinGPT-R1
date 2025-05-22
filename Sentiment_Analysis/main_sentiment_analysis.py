@@ -1,5 +1,8 @@
-from sentiment_model_class import Sentiment_Analysis_Model  # Import the class from new_model.py
-from data_loader import get_train_test_split
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from Sentiment_Analysis.sentiment_model_class import Sentiment_Analysis_Model  # Import the class from new_model.py
+from Sentiment_Analysis.data_loader import get_train_test_split
 
 
 # Initialize the sentiment analysis model
