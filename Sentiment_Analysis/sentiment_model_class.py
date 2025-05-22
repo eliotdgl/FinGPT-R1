@@ -129,36 +129,44 @@ class Sentiment_Analysis_Model:
 
         trainer.train()
     def save(self, base_path="Sentiment_Analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
-        print("\nSaving model\n")
-
-    # 1. Create custom timestamp or use default
+        """
+        Save the current model (with LoRA adapters, if any) and tokenizer to a timestamped folder.
+        Keeps only the `keep_last` most recent saved versions.
+        """
+    # 1. Determine timestamp
         if timestamp_name is None:
             timestamp_name = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # 2. Create versioned save directory
+    # 2. Build save path and create directory
         save_path = f"{base_path}_{timestamp_name}"
         os.makedirs(save_path, exist_ok=True)
 
-    # 3. Save model and tokenizer
+    # 3. Save model weights and adapters
         if isinstance(self.model, PeftModel):
-            self.model.base_model.save_pretrained(save_path)  # Save full model
-            self.model.save_pretrained(save_path)              # Save adapters
+        # Save base model
+            self.model.base_model.save_pretrained(save_path)
+        # Save LoRA adapters
+            self.model.save_pretrained(save_path)
         else:
+        # Standard model save
             self.model.save_pretrained(save_path)
 
+    # 4. Save tokenizer
         self.tokenizer.save_pretrained(save_path)
-        print(f"\nModel saved to: {save_path}\n")
 
-    # 4. Delete old saved versions
-        pattern = base_path + "_*"
+        print(f"\nModel and tokenizer saved to: {save_path}\n")
+
+    # 5. Cleanup old versions
+        pattern = f"{base_path}_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
-        if len(saved_versions) > keep_last:
-            for old_path in saved_versions[keep_last:]:
-                try:
-                    shutil.rmtree(old_path)
-                    print(f"\nDeleted old model directory: {old_path}\n")
-                except Exception as e:
-                    print(f"\nWarning: Could not delete {old_path}: {e}\n")
+    # Keep only the most recent `keep_last` folders
+        for old_path in saved_versions[keep_last:]:
+            try:
+                shutil.rmtree(old_path)
+                print(f"Deleted old model directory: {old_path}")
+            except Exception as e:
+                print(f"Warning: could not delete {old_path}: {e}")
+
 
     def load(self, base_path="Sentiment_Analysis/models/sft-sentiment-model"):
     # 1. Locate the most recent version
