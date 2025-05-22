@@ -81,7 +81,7 @@ class Sentiment_Analysis_Model:
             raise ValueError(f"Unexpected label values: {label_values}")
 
         dataset = Dataset.from_list(new_examples)
-        return dataset.train_test_split(test_size=0.2).map(self._tokenize)
+        return dataset.map(self._tokenize)
 
     def _tokenize(self, example):
         return self.tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
@@ -91,11 +91,11 @@ class Sentiment_Analysis_Model:
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-    def train(self, dataset_splits, output_dir="Sentiment_Analysis/models/sft-sentiment-model", epochs=3, batch_size=8):
+    def train(self, dataset, output_dir="Sentiment_Analysis/models/sft-sentiment-model", epochs=3, batch_size=8):
         print("\nTraining started\n")
         if not self.model or not self.tokenizer:
             raise RuntimeError("\nModel is not loaded/initialized. Call load() first or initialize a new one.\n")
-
+        dataset_splits = dataset.train_test_split(test_size=0.2)
         training_args = TrainingArguments(
             output_dir=output_dir,
             eval_strategy="epoch",
