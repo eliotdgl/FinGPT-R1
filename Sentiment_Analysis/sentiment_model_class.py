@@ -84,7 +84,14 @@ class Sentiment_Analysis_Model:
         return dataset.map(self._tokenize)
 
     def _tokenize(self, example):
-        return self.tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
+        tok = self.tokenizer(
+        example["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=128,
+        )
+        tok["labels"] = example["label"]
+        return tok
 
     def compute_metrics(self, pred):
         labels = pred.label_ids
@@ -153,36 +160,29 @@ class Sentiment_Analysis_Model:
                 except Exception as e:
                     print(f"\nWarning: Could not delete {old_path}: {e}\n")
 
-    def load(self, base_path="Sentiment_Analysis/models/sentiment_model"):
+    def load(self, base_path="Sentiment_Analysis/models/sft-sentiment-model"):
     # 1. Locate the most recent version
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
-
         if not saved_versions:
             raise FileNotFoundError(f"\nNo saved model found at {base_path}\n")
-
         latest_version = saved_versions[0]
         print(f"\nLoading the latest model from: {latest_version}\n")
 
     # 2. Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(latest_version)
 
-    # 3. Load model with correct number of labels
+    # 3. Load config + base model
         config = AutoConfig.from_pretrained(latest_version)
-        config.num_labels = len(self.label_map)  # ensure label count is correct
-        self.model = AutoModelForSequenceClassification.from_pretrained(latest_version, config=config)
-
-    # 4. Re-apply PEFT LoRA wrapping
-        lora_config = LoraConfig(
-            r=8,
-            lora_alpha=32,
-            target_modules=["query", "value"],
-            lora_dropout=0.05,
-            bias="none",
-            task_type=TaskType.SEQ_CLS
+        config.num_labels = len(self.label_map)
+        base_model = AutoModelForSequenceClassification.from_pretrained(
+        latest_version, config=config
         )
-        self.model = get_peft_model(self.model, lora_config)
-        print("\nModel successfully loaded and LoRA applied.\n")
+
+    # 4. Load PEFT adapters (restores your trained LoRA weights)
+        self.model = PeftModel.from_pretrained(base_model, latest_version)
+
+        print("\nModel and LoRA adapters successfully loaded.\n")
 
     def predict(self, text):
         if self.model is None or self.tokenizer is None:
@@ -198,8 +198,7 @@ class Sentiment_Analysis_Model:
 
     # Get predicted class index and label
         pred_id = torch.argmax(logits, dim=1).item()
-        label_map = {0: "negative", 1: "neutral", 2: "positive"}
-        pred_label = label_map[pred_id]
+        pred_label = self.label_names[pred_id]
 
         return probabilities, pred_label
         
