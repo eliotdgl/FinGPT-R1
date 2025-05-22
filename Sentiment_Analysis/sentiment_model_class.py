@@ -30,7 +30,7 @@ class Sentiment_Analysis_Model:
             lora_config = LoraConfig(
                 r=8,
                 lora_alpha=32,
-                target_modules=["query", "value"],
+                target_modules=["query", "key", "value"],
                 lora_dropout=0.05,
                 bias="none",
                 task_type=TaskType.SEQ_CLS
@@ -44,7 +44,7 @@ class Sentiment_Analysis_Model:
             lora_config = LoraConfig(
                 r=8,
                 lora_alpha=32,
-                target_modules=["query", "value"],
+                target_modules=["query", "key", "value"],
                 lora_dropout=0.05,
                 bias="none",
                 task_type=TaskType.SEQ_CLS
@@ -199,6 +199,5 @@ class Sentiment_Analysis_Model:
     # Get predicted class index and label
         pred_id = torch.argmax(logits, dim=1).item()
         pred_label = self.label_names[pred_id]
-
         return probabilities, pred_label
-        
+    
