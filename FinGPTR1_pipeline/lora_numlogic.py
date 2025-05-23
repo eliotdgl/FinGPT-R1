@@ -1,11 +1,16 @@
 import torch
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
 from torch.utils.data import Dataset
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     Trainer,
-    TrainingArguments
+    TrainingArguments,
+    AutoModelForSequenceClassification,
+    pipeline
 )
 from peft import get_peft_model, LoraConfig, TaskType
 import re
@@ -30,13 +35,11 @@ base_tokenizer.pad_token = base_tokenizer.eos_token
 base_model.config.pad_token_id = base_tokenizer.pad_token_id
 base_model.resize_token_embeddings(len(base_tokenizer))
 
-
 raw_data = load_dataset(
     'csv',
     data_files='data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv'
 )
 dataset = raw_data['train']
-
 
 def contains_numbers(example):
     return bool(re.search(r'\d', example['Sentence']))
@@ -49,12 +52,18 @@ def add_special_tokens(example):
 
 processed_data = filtered_dataset.map(add_special_tokens)
 
+
+id2label = {0: "neutral", 1: "positive", 2: "negative"}
+label2id = {"neutral": 0, "positive": 1, "negative": 2}
+
+dataset = pd.read_csv('data/local_data/test_all_agree.csv', header=None, names=["Sentence", "Label"], skiprows=1)
+
 def tokenize(example):
-    enc = base_tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
-    enc["labels"] = enc["input_ids"].copy()
+    enc = base_tokenizer(example["Sentence"], truncation=True, padding="max_length", max_length=128)
+    enc["labels"] = label2id[example["Label"]]
     return enc
 
-tokenized_dataset = processed_data.map(tokenize, remove_columns=["text"])
+tokenized_dataset = processed_data.map(tokenize,)
 tokenized_dataset.set_format("torch")
 
 # LoRA config: adjust rank, alpha, dropout as needed
@@ -62,34 +71,21 @@ lora_config = LoraConfig(
     task_type=TaskType.CAUSAL_LM,
     r=8,
     lora_alpha=32,
-    lora_dropout=0.1,
-    target_modules=["c_attn"],  # GPT2 key/query/value proj layers, adjust per model
+    lora_dropout=0.05,
+    target_modules=["query", "key", "value"]  # GPT2 key/query/value proj layers, adjust per model
 )
 
-# Wrap model with LoRA
 model = get_peft_model(base_model, lora_config)
 
-# Freeze all but LoRA params + embeddings + lm_head
-for param in model.parameters():
-    param.requires_grad = False
-for name, param in model.named_parameters():
-    if "lora" in name or "embed" in name or "lm_head" in name:
-        param.requires_grad = True
-
-
-# 6. Training arguments
 training_args = TrainingArguments(
-    output_dir="FinGPTR1_pipeline/models/lora_numlogic",
-    per_device_train_batch_size=2,
+    output_dir="FinGPTR1_pipeline/models/LoRA_numlogic",
+    per_device_train_batch_size=16,
     num_train_epochs=3,
-    save_strategy="epoch",
-    logging_dir="FinGPTR1_pipeline/models/lora_numlogic/logs",
+    logging_dir=os.path.join("FinGPTR1_pipeline/models/LoRA_numlogic", "logs"),
     logging_steps=10,
-    save_total_limit=1
+    save_total_limit=2
 )
 
-
-# 7. Trainer setup
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -97,12 +93,8 @@ trainer = Trainer(
     tokenizer=base_tokenizer
 )
 
-
-# 8. Train
 trainer.train()
 
-# 9. Save
 full_model = model.merge_and_unload()
-
-full_model.save_pretrained("FinGPTR1_pipeline/models/lora_numlogic/model")
-base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/lora_numlogic/tokenizer")
+full_model.save_pretrained("FinGPTR1_pipeline/models/LoRA_numlogic/model")
+base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/LoRA_numlogic/tokenizer")
