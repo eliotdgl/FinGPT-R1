@@ -18,7 +18,7 @@ class Sentiment_Analysis_Model:
     def __init__(self, model_name=None, label_map=None, load_model=False, num_label=3):
         self.label_map = label_map or {-1: 0, 0: 1, 1: 2}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
-        self.label_names = ["negative", "neutral", "positive"]
+        self.label_names = ["neutral", "positive", "negative"]
 
         self.model_name = model_name
 
@@ -54,7 +54,6 @@ class Sentiment_Analysis_Model:
             self.tokenizer = None
             self.model = None
 
-
         
     def prepare_dataset(self, raw_input):
         # Load raw data
@@ -75,7 +74,7 @@ class Sentiment_Analysis_Model:
         if label_values.issubset(set(self.label_map.keys())):
             new_examples = [{"text": ex["text"], "label": self.label_map[ex["label"]]} for ex in raw_examples]
         elif label_values.issubset({'neutral', 'positive', 'negative'}):
-            mapping = {'negative': 0, 'neutral': 1, 'positive': 2}
+            mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
             new_examples = [{"text": ex["text"], "label": mapping[ex["label"]]} for ex in raw_examples]
         else:
             raise ValueError(f"Unexpected label values: {label_values}")

@@ -30,14 +30,11 @@ df_all_agree=pd.read_csv(csv_path_all_agree)
 train_df_all_agree, test_df_all_agree = get_train_test_split(csv_path_all_agree)
 train_df_all_agree.to_csv('data/local_data/train_all_agree.csv', index=False)
 test_df_all_agree.to_csv('data/local_data/test_all_agree.csv', index=False)
-print(train_df_all_agree)
 
 # Initialize and train the model without saving any CSV
 sentiment_model = Sentiment_Analysis_Model()
 dataset_train_all_agree = sentiment_model.prepare_dataset('data/local_data/train_all_agree.csv') 
-print("\n")
-for example in dataset_train_all_agree.select(range(2)):
-    print(example)
+
 # Save local data
 pkl_path_train = os.path.join('data', 'local_data', 'dataset_train_all_agree.pkl')
 with open(pkl_path_train, 'wb') as f:
