@@ -15,7 +15,7 @@ class TextDataGenerator:
             0: ["{} keeps the price target at {}.",
                 "{} declares quarterly dividend of {} per Share, consistent with previous quarters" ],
             #phrases with negative sentiment with one number
-            -1: ["{} lost {} last quarter."],
+            2: ["{} lost {} last quarter."],
             #phrases with positive sentiment with one number
             1: ["{} gained {} last quarter."],
         }
@@ -25,7 +25,7 @@ class TextDataGenerator:
                  "{} went revenue from {} to {}.","{} growth was {} last quarter and is now {}.",
                  "Increase in total sales {} offset by decline in comparable store sales {}"],
             #phrases with negative sentiment with two numbers
-            -1: ["{} revenue went down of {} last quarter",
+            2: ["{} revenue went down of {} last quarter",
                 "{} capitalization went from {} down to {}.", ],
             #phrases with positive sentiment with two numbers
             1: ["{} revenue went up of {} last quarter", 
@@ -33,7 +33,7 @@ class TextDataGenerator:
         }
         self.templates_stock_change ={
             
-            -1: ["{} {}(-{}%)"],
+            2: ["{} {}(-{}%)"],
             1: ["{} {}(+{}%)"]
 
         }
@@ -55,23 +55,23 @@ class TextDataGenerator:
         
         if type_of_sentence == 0:
             # One number template — neutral if small, positive/negative otherwise
-            sentiment=random.choice([-1, 0, 1])
+            sentiment=random.choice([2, 0, 1])
             if sentiment==0:
                 number = round(random.uniform(0, 300), 2)
                 template = random.choice(self.templates_one_number[0])
                 sentence = template.format(company, f"{currency}{abs(number)}M")
                 label = 0  # neutral
-            elif sentiment==-1:
+            elif sentiment==2:
                 number = round(random.uniform(10,200), 2)
-                template = random.choice(self.templates_one_number[-1])
+                template = random.choice(self.templates_one_number[2])
                 sentence = template.format(company, f"{currency}{abs(number)}M")
                 if number < 20:
-                    label = 0
+                    label = 0 #neutral
                 else:
-                    label = -1  # negative
+                    label = 2  # negative
             else:
                 number = round(random.uniform(10,200), 2)
-                template = random.choice(self.templates_one_number[-1])
+                template = random.choice(self.templates_one_number[2])
                 sentence = template.format(company, f"{currency}{abs(number)}M")
                 if number < 20:
                     label = 0
@@ -84,7 +84,7 @@ class TextDataGenerator:
             num2 = round(random.uniform(10, 1000), 2)
             delta = num2-num1
             if abs(delta) < 10:
-                label = 0  # neutra
+                label = 0  # neutral
                 template = random.choice(self.templates_two_numbers[0])
                 sentence = template.format(company, f"{currency}{num1}", f"{currency}{num2}")
             elif delta > 0:
@@ -92,13 +92,13 @@ class TextDataGenerator:
                 template = random.choice(self.templates_two_numbers[1])
                 sentence = template.format(company, f"{currency}{num1}", f"{currency}{num2}")
             else:
-                label = -1  # positive
-                template = random.choice(self.templates_two_numbers[-1])
+                label = 2  # positive
+                template = random.choice(self.templates_two_numbers[2])
                 sentence = template.format(company, f"{currency}{num1}", f"{currency}{num2}")
 
         else:
             # Stock change template — label based on % change
-            sentiment = random.choice([-1, 1])
+            sentiment = random.choice([2, 1])
             value= round(random.uniform(0, 100), 2)
             change = round(random.uniform(-10, 10), 2)
 
@@ -110,12 +110,12 @@ class TextDataGenerator:
                 else:
                     label = 1
             else:
-                template = random.choice(self.templates_stock_change[-1])
+                template = random.choice(self.templates_stock_change[2])
                 sentence = template.format(company, f"{currency}{value}",  f"{abs(change)}")
                 if abs(change) < 1:
                     label = 0
                 else:
-                    label = -1
+                    label = 2
         return [sentence, label]
 
 

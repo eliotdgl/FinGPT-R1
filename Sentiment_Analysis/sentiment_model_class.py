@@ -16,7 +16,7 @@ from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
 
 class Sentiment_Analysis_Model:
     def __init__(self, model_name=None, label_map=None, load_model=False, num_label=3):
-        self.label_map = label_map or {-1: 0, 0: 1, 1: 2}
+        self.label_map = label_map or {-1: 2, 0: 0, 1: 1}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
         self.label_names = ["neutral", "positive", "negative"]
 
@@ -76,6 +76,8 @@ class Sentiment_Analysis_Model:
         elif label_values.issubset({'neutral', 'positive', 'negative'}):
             mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
             new_examples = [{"text": ex["text"], "label": mapping[ex["label"]]} for ex in raw_examples]
+        elif label_values.issubset({0, 1, 2}):
+            new_examples = [{"text": ex["text"], "label": ex["label"]} for ex in raw_examples]
         else:
             raise ValueError(f"Unexpected label values: {label_values}")
 
@@ -102,6 +104,8 @@ class Sentiment_Analysis_Model:
         if not self.model or not self.tokenizer:
             raise RuntimeError("\nModel is not loaded/initialized. Call load() first or initialize a new one.\n")
         dataset_splits = dataset.train_test_split(test_size=0.2)
+            
+            
         training_args = TrainingArguments(
             output_dir=output_dir,
             eval_strategy="epoch",
