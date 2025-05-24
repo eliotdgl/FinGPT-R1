@@ -128,4 +128,3 @@ class TextDataGenerator:
                 texts.append(text)
                 labels.append(label)
         return [texts, labels]
-generator=TextDataGenerator()

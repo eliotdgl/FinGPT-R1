@@ -13,6 +13,10 @@ import glob
 import shutil
 import torch.nn.functional as F
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from tokenization.preprocess_text import preprocess_text
 
 class Sentiment_Analysis_Model:
     def __init__(self, model_name=None, label_map=None, load_model=False, num_label=3):
@@ -37,9 +41,9 @@ class Sentiment_Analysis_Model:
             )
             self.model = get_peft_model(self.model, lora_config)  # Only wrap here
         elif not load_model and model_name is None:
-            self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+            self.tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
             self.model = AutoModelForSequenceClassification.from_pretrained(
-            "bert-base-uncased", num_labels=len(self.label_map)
+            "yiyanghkust/finbert-tone", num_labels=len(self.label_map)
             )
             lora_config = LoraConfig(
                 r=8,
@@ -72,12 +76,12 @@ class Sentiment_Analysis_Model:
         # Remap labels
         label_values = set(ex["label"] for ex in raw_examples)
         if label_values.issubset(set(self.label_map.keys())):
-            new_examples = [{"text": ex["text"], "label": self.label_map[ex["label"]]} for ex in raw_examples]
+            new_examples = [{"text": preprocess_text(ex["text"])[0], "label": self.label_map[ex["label"]]} for ex in raw_examples]
         elif label_values.issubset({'neutral', 'positive', 'negative'}):
             mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
-            new_examples = [{"text": ex["text"], "label": mapping[ex["label"]]} for ex in raw_examples]
+            new_examples = [{"text": preprocess_text(ex["text"])[0], "label": mapping[ex["label"]]} for ex in raw_examples]
         elif label_values.issubset({0, 1, 2}):
-            new_examples = [{"text": ex["text"], "label": ex["label"]} for ex in raw_examples]
+            new_examples = [{"text": preprocess_text(ex["text"])[0], "label": ex["label"]} for ex in raw_examples]
         else:
             raise ValueError(f"Unexpected label values: {label_values}")
 
