@@ -22,82 +22,45 @@ print("\nDataset LOADED\n")
 
 # ===== Training =====
 
-INPUT_PATH = "FinGPTR1_pipeline/models/NoMLP"
-OUTPUT_PATH = "models/NoMLPLoRA"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
-
-# ====================
-
-INPUT_PATH = "FinGPTR1_pipeline/models/NoMLP"
-OUTPUT_PATH = "models/NoMLPLoRAWhole"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_', 'embeddings', 'classifier'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
-
-
-# ====================
-
-
-INPUT_PATH = "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze"
-OUTPUT_PATH = "models/NoMLPandGradUnfreezeLoRA"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
-
-# ====================
-
-INPUT_PATH = "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze"
-OUTPUT_PATH = "models/NoMLPandGradUnfreezeLoRAWhole"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_', 'embeddings', 'classifier'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
+train_jobs = [
+    {
+        "input": "FinGPTR1_pipeline/models/NoMLP",
+        "output": "models/NoMLPLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/NoMLP",
+        "output": "models/NoMLPLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
+        "output": "models/NoMLPandGradUnfreezeLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
+        "output": "models/NoMLPandGradUnfreezeLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+    {
+        "input": None,
+        "output": "models/BertLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": None,
+        "output": "models/BertLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+]
 
 
-# ====================
-
-
-model_name = "bert-base-uncased"
-OUTPUT_PATH = "models/BertLoRA"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
-
-# ====================
-
-model_name = "bert-base-uncased"
-OUTPUT_PATH = "models/BertLoRAWhole"
-
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train, unfreeze_layers = ['lora_', 'embeddings', 'classifier'])
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
+for job in train_jobs:
+    print(f"\nTraining: {job['output']}")
+    sentiment_model = Sentiment_Analysis_Model(model_name=job["input"])
+    print(f"Model LOADED")
+    sentiment_model.train(dataset_train, unfreeze_layers=job["unfreeze"])
+    print(f"Model TRAINED")
+    sentiment_model.save(base_path=job["output"], timestamp_name="1", keep_last=3)
+    print(f"Model SAVED to: {job['output']}")

@@ -98,6 +98,7 @@ base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/NumLogic/tokenizer")
 
 # ====================
 
+print(f"\nTraining: NumLogicLoRA")
 
 INPUT_PATH = "FinGPTR1_pipeline/models/NumLogic"
 OUTPUT_PATH = "models/NumLogicLoRA"
@@ -112,6 +113,8 @@ sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
 print(f"\nModel saved to: {OUTPUT_PATH}\n")
 
 # ====================
+
+print(f"\nTraining: NumLogicLoRAWhole")
 
 OUTPUT_PATH = "models/NumLogicLoRAWhole"
 

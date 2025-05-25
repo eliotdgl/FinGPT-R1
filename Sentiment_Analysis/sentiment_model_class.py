@@ -46,9 +46,9 @@ class Sentiment_Analysis_Model:
             )
             self.model = get_peft_model(self.model, lora_config)  # Only wrap here
         elif not load_model and model_name is None:
-            self.tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
+            self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
             self.model = AutoModelForSequenceClassification.from_pretrained(
-            "yiyanghkust/finbert-tone", num_labels=len(self.label_map)
+            "bert-base-uncased", num_labels=len(self.label_map)
             )
             lora_config = LoraConfig(
                 r=8,
@@ -119,7 +119,6 @@ class Sentiment_Analysis_Model:
         
         for name, param in self.model.named_parameters():
             if any(key in name for key in unfreeze_layers):
-                print(name)
                 param.requires_grad = True
         
         total_params = sum(p.numel() for p in self.model.parameters())
