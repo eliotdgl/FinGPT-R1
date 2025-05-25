@@ -108,12 +108,25 @@ class Sentiment_Analysis_Model:
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-    def train(self, dataset, output_dir="Sentiment_Analysis/models/sft-sentiment-model", epochs=3, batch_size=8):
+    def train(self, dataset, output_dir: str = "Sentiment_Analysis/models/sft-sentiment-model", unfreeze_layers: list = ['lora_'], epochs = 3, batch_size = 16):
         print("\nTraining started\n")
         if not self.model or not self.tokenizer:
             raise RuntimeError("\nModel is not loaded/initialized. Call load() first or initialize a new one.\n")
         dataset_splits = dataset.train_test_split(test_size=0.2)
-            
+        
+        for name, param in self.model.named_parameters():
+            param.requires_grad = False
+        
+        for name, param in self.model.named_parameters():
+            if any(key in name for key in unfreeze_layers):
+                print(name)
+                param.requires_grad = True
+        
+        total_params = sum(p.numel() for p in self.model.parameters())
+        trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        trainable_ratio = trainable_params / total_params
+
+        print(f"\nProportion trainable parameters: {trainable_ratio * 100:.2f}%\n")
             
         training_args = TrainingArguments(
             output_dir=output_dir,
@@ -140,6 +153,8 @@ class Sentiment_Analysis_Model:
         )
 
         trainer.train()
+
+
     def save(self, base_path="Sentiment_Analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
         """
         Save the current model (with LoRA adapters, if any) and tokenizer to a timestamped folder.

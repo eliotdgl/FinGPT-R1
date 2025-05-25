@@ -27,20 +27,6 @@ from Sentiment_Analysis.data_loader import get_train_test_split
 
 special_tokens = ["<SON>", "<VAL>", "<EON>"]
 
-model_name = "yiyanghkust/finbert-tone"
-base_tokenizer = AutoTokenizer.from_pretrained(model_name)
-base_model = AutoModelForSequenceClassification.from_pretrained(model_name)
-
-base_tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
-base_tokenizer.pad_token = base_tokenizer.eos_token
-base_model.config.pad_token_id = base_tokenizer.pad_token_id
-base_model.resize_token_embeddings(len(base_tokenizer))
-
-base_model.save_pretrained("FinGPTR1_pipeline/models/NumLogic/model")
-base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/NumLogic/tokenizer")
-
-INPUT_PATH = "FinGPTR1_pipeline/models/NumLogic"
-OUTPUT_PATH = "models/NumLogicLoRA"
 
 # Load the CSV file
 print("\nLoading dataset...\n")
@@ -51,16 +37,7 @@ generated_data=generator.generate_batch()
 sentiment_data = Sentiment_Analysis_Model()
 dataset_train = sentiment_data.prepare_dataset(generated_data) 
 
-
 print("\nDataset LOADED\n")
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
-print("\nModel LOADED\n")
-sentiment_model.train(dataset_train)
-print("\nModel TRAINED\n")
-sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
-
-print(f"\nModel saved to: {OUTPUT_PATH}\n")
-
 
 
 def prepare_dataset(self, raw_input):
@@ -102,3 +79,46 @@ def _tokenize(self, example):
     )
     tok["labels"] = example["label"]
     return tok
+
+
+# ===== Training =====
+
+model_name = "yiyanghkust/finbert-tone"
+base_tokenizer = AutoTokenizer.from_pretrained(model_name)
+base_model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+base_tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+base_tokenizer.pad_token = base_tokenizer.eos_token
+base_model.config.pad_token_id = base_tokenizer.pad_token_id
+base_model.resize_token_embeddings(len(base_tokenizer))
+
+base_model.save_pretrained("FinGPTR1_pipeline/models/NumLogic/model")
+base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/NumLogic/tokenizer")
+
+
+# ====================
+
+
+INPUT_PATH = "FinGPTR1_pipeline/models/NumLogic"
+OUTPUT_PATH = "models/NumLogicLoRA"
+
+
+sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
+print("\nModel LOADED\n")
+sentiment_model.train(dataset_train, unfreeze_layers = ['lora_'])
+print("\nModel TRAINED\n")
+sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
+
+print(f"\nModel saved to: {OUTPUT_PATH}\n")
+
+# ====================
+
+OUTPUT_PATH = "models/NumLogicLoRAWhole"
+
+sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
+print("\nModel LOADED\n")
+sentiment_model.train(dataset_train, unfreeze_layers = ['lora_', 'embeddings', 'classifier'])
+print("\nModel TRAINED\n")
+sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
+
+print(f"\nModel saved to: {OUTPUT_PATH}\n")
