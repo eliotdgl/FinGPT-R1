@@ -22,7 +22,7 @@ class TextDataGenerator:
         self.templates_two_numbers = {
             #phrases with neutral sentiment with two numbers
             0: [ "{} revenue was {} last quarter and is now {}.",
-                 "{} went revenue from {} to {}.","{} growth was {} last quarter and is now {}.",
+                 "{} revenue went from {} to {}.","{} growth was {} last quarter and is now {}.",
                  "Increase in total sales {} offset by decline in comparable store sales {}"],
             #phrases with negative sentiment with two numbers
             2: ["{} revenue went down of {} last quarter",
@@ -99,8 +99,8 @@ class TextDataGenerator:
         else:
             # Stock change template — label based on % change
             sentiment = random.choice([2, 1])
-            value= round(random.uniform(0, 100), 2)
-            change = round(random.uniform(-10, 10), 2)
+            value= round(random.uniform(50, 300), 2)
+            change = round(random.uniform(-5, 5), 2)
 
             if sentiment == 1:
                 template = random.choice(self.templates_stock_change[1])
