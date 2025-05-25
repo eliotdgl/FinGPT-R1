@@ -14,18 +14,18 @@ from tokenization.preprocess_text import preprocess_text
 
 # ===== Training =====
 
-INPUT_PATH = "FinGPTR1_pipeline/models/NoMLP"
-OUPUT_PATH = "Sentiment_Analysis/models/NoMLP"
+#INPUT_PATH = "FinGPTR1_pipeline/models/NoMLP"
+OUTPUT_PATH = "models/FinBertLoRA"  #"models/NoMLPGen"
 
 # Load the CSV file
 print("\nLoading dataset...\n")
 
-with open('data/local_data/dataset_train_all_agree.pkl', 'rb') as f:
-    dataset_train_all_agree = pickle.load(f)
+with open('data/local_data/generated_data.pkl', 'rb') as f:
+    dataset_train = pickle.load(f)
 print("\nDataset LOADED\n")
-sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
+sentiment_model = Sentiment_Analysis_Model()
 print("\nModel LOADED\n")
-sentiment_model.train(dataset_train_all_agree)
+sentiment_model.train(dataset_train)
 print("\nModel TRAINED\n")
 sentiment_model.save(base_path=OUTPUT_PATH, timestamp_name="1", keep_last=3)
 
@@ -36,7 +36,7 @@ print(f"\nModel saved to: {OUTPUT_PATH}\n")
 
 
 # ===== Inference =====
-
+"""
 sentiment_model = Sentiment_Analysis_Model(load_model=True)
 sentiment_model.load(base_path=OUTPUT_PATH)
 
@@ -57,3 +57,4 @@ pred_labels = np.array(pred_labels)
 print('Result: ', np.sum(pred_labels == correct_labels))
 
 # ====================
+"""

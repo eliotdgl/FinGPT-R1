@@ -115,10 +115,11 @@ pkl_path_test = os.path.join('data', 'local_data', 'dataset_test_50_agree.pkl')
 with open(pkl_path_test, 'wb') as f:
     pickle.dump(test_df_50_agree, f)
 
-generator=TextDataGenerator()
-generated_data=generator.generate_batch()
 
+generator=TextDataGenerator(number_of_episode=5)
+generated_data=generator.generate_batch()
+gen = sentiment_model.prepare_dataset(generated_data) 
 
 pkl_path = os.path.join('data', 'local_data', 'generated_data.pkl')
 with open(pkl_path, 'wb') as f:
-    pickle.dump(generated_data, f)
+    pickle.dump(gen, f)

@@ -12,10 +12,10 @@ model = AutoModelForSequenceClassification.from_pretrained(base_model)
 
 
 #PATH = 'FinGPTR1_pipeline/models/Base'
-PATH = 'FinGPTR1_pipeline/models/NoMLP'
+#PATH = 'FinGPTR1_pipeline/models/NoMLP'
 #PATH = 'FinGPTR1_pipeline/models/NoMLPandGradUnfreeze'
 #PATH = 'FinGPTR1_pipeline/models/AllCustom'
-#PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
+PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
 
 Fin_tokenizer = FinGPTR1_Tokenizer(PATH)
 
