@@ -31,6 +31,11 @@ class Sentiment_Analysis_Model:
             self.model = AutoModelForSequenceClassification.from_pretrained(
             model_name + "/model", num_labels=len(self.label_map)
             )
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+                self.model.resize_token_embeddings(len(self.tokenizer))
+                self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
             lora_config = LoraConfig(
                 r=8,
                 lora_alpha=32,
