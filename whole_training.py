@@ -24,6 +24,26 @@ print("\nDataset LOADED\n")
 
 train_jobs = [
     {
+        "input": None,
+        "output": "models/BertLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": None,
+        "output": "models/BertLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/Base",
+        "output": "models/BertExtLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/Base",
+        "output": "models/BertExtLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+    {
         "input": "FinGPTR1_pipeline/models/NoMLP",
         "output": "models/NoMLPLoRA",
         "unfreeze": ["lora_"]
@@ -61,36 +81,6 @@ train_jobs = [
     {
         "input": "FinGPTR1_pipeline/models/bert_version/NoMLPandGradUnfreeze",
         "output": "models/bert_version/NoMLPandGradUnfreezeLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
-        "input": None,
-        "output": "models/BertLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": None,
-        "output": "models/BertLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/Base",
-        "output": "models/BertExtLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/Base",
-        "output": "models/BertExtLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/bert_version/NumLogic",
-        "output": "models/bert_version/NumLogicLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/bert_version/NumLogic",
-        "output": "models/bert_version/NumLogicLoRAWhole",
         "unfreeze": ["lora_", "embeddings", "classifier"]
     },
 ]

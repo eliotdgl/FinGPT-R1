@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 import pickle
+import os
 from tqdm import tqdm
 from datasets import load_dataset
 
@@ -43,11 +44,18 @@ def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_
 
     rd = ReliabilityDiagram()
 
+    plot_dir = f"plots/{model_name}"
+    os.makedirs(plot_dir, exist_ok=True)
+
+    plt.figure()
     rd.plot(probs_np_finp, correct_numeric_finp)
-    plt.savefig(f"plots/{model_name}_finp_reliability_diagram.png")
+    plt.savefig(f"{plot_dir}/finp_reliability_diagram.png")
+
+    plt.figure()
     rd.plot(probs_np_gen, correct_numeric_gen)
-    plt.savefig(f"plots/{model_name}_gen_reliability_diagram.png")
-    plt.close()
+    plt.savefig(f"{plot_dir}/gen_reliability_diagram.png")
+
+    plt.close('all')
 
     df_results.loc[model_name] = [accuracy_finp, accuracy_gen, avg_conf_finp, avg_conf_gen, ece_score_finp, ece_score_gen]
     
@@ -147,7 +155,7 @@ def run_evaluation(model_name, base_path=None, special_tokens=False):
 custom_models = [
     ("BertLoRA", "models/BertLoRA"),
     ("BertLoRAWhole", "models/BertLoRAWhole"),
-    ("BertExtLoRA", "models/BertLoRA"),
+    ("BertExtLoRA", "models/BertExtLoRA"),
     ("BertExtLoRAWhole", "models/BertExtLoRAWhole"),
     ("NoMLPLoRA", "models/NoMLPLoRA"),
     ("bert_versionNoMLPLoRA", "models/bert_version/NoMLPLoRA"),
