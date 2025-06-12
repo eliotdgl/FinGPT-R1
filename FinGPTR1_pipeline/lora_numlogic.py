@@ -7,6 +7,7 @@ from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
+    AutoConfig,
     Trainer,
     TrainingArguments,
     AutoModelForSequenceClassification,
@@ -83,25 +84,26 @@ def _tokenize(self, example):
 
 # ===== Training =====
 
-model_name = "yiyanghkust/finbert-tone"
+model_name = "bert-base-uncased"
 base_tokenizer = AutoTokenizer.from_pretrained(model_name)
-base_model = AutoModelForSequenceClassification.from_pretrained(model_name)
+config = AutoConfig.from_pretrained(model_name, num_labels=3)
+base_model = AutoModelForSequenceClassification.from_pretrained(model_name, config=config)
 
 base_tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
 base_tokenizer.pad_token = base_tokenizer.eos_token
 base_model.config.pad_token_id = base_tokenizer.pad_token_id
 base_model.resize_token_embeddings(len(base_tokenizer))
 
-base_model.save_pretrained("FinGPTR1_pipeline/models/NumLogic/model")
-base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/NumLogic/tokenizer")
+base_model.save_pretrained("FinGPTR1_pipeline/models/bert_version/NumLogic/model")
+base_tokenizer.save_pretrained("FinGPTR1_pipeline/models/bert_version/NumLogic/tokenizer")
 
 
 # ====================
 
 print(f"\nTraining: NumLogicLoRA")
 
-INPUT_PATH = "FinGPTR1_pipeline/models/NumLogic"
-OUTPUT_PATH = "models/NumLogicLoRA"
+INPUT_PATH = "FinGPTR1_pipeline/models/bert_version/NumLogic"
+OUTPUT_PATH = "models/bert_version/NumLogicLoRA"
 
 
 sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
@@ -116,7 +118,7 @@ print(f"\nModel saved to: {OUTPUT_PATH}\n")
 
 print(f"\nTraining: NumLogicLoRAWhole")
 
-OUTPUT_PATH = "models/NumLogicLoRAWhole"
+OUTPUT_PATH = "models/bert_version/NumLogicLoRAWhole"
 
 sentiment_model = Sentiment_Analysis_Model(model_name=INPUT_PATH)
 print("\nModel LOADED\n")

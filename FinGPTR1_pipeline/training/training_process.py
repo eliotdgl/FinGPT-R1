@@ -158,7 +158,7 @@ def FGPTR1_training(PATH: str,
 
     #label_map = {"Neutral": 0, "Rise": 1, "Fall": 2}  # Map sentiment classes
     from datasets import load_dataset
-    data = load_dataset('csv', data_files='data/sentiment_analysis_train/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv')
+    data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
     from sklearn.model_selection import train_test_split
     train_news, val_news, train_labels, val_labels = train_test_split(data["train"]["Sentence"], data["train"]["Label"], test_size=0.1)
 

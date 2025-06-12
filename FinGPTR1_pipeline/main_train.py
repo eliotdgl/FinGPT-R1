@@ -5,19 +5,19 @@ from FinGPTR1_pipeline.FGPTR1_tokenizer import FinGPTR1_Tokenizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-base_model= "yiyanghkust/finbert-tone"
+base_model= "bert-base-uncased"
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 model = AutoModelForSequenceClassification.from_pretrained(base_model)
 
 
 #PATH = 'FinGPTR1_pipeline/models/Base'
-#PATH = 'FinGPTR1_pipeline/models/NoMLP'
-#PATH = 'FinGPTR1_pipeline/models/NoMLPandGradUnfreeze'
-#PATH = 'FinGPTR1_pipeline/models/AllCustom'
-PATH = 'FinGPTR1_pipeline/models/AllCustomandGradUnfreeze'
+#PATH = 'FinGPTR1_pipeline/models/bert_version/NoMLP'
+#PATH = 'FinGPTR1_pipeline/models/bert_version/NoMLPandGradUnfreeze'
+#PATH = 'FinGPTR1_pipeline/models/bert_version/AllCustom'
+PATH = 'FinGPTR1_pipeline/models/bert_version/AllCustomandGradUnfreeze'
 
-Fin_tokenizer = FinGPTR1_Tokenizer(PATH)
+Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train=True)
 
 print("\nFinGPTR1 tokenizer loaded\n")
 
