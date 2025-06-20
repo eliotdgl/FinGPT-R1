@@ -1,21 +1,12 @@
-import numpy as np
-import pandas as pd
-import torch
 import pickle
-from tqdm import tqdm
-from datasets import load_dataset
+from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 
-from Sentiment_Analysis.sentiment_model_class import Sentiment_Analysis_Model
-from Sentiment_Analysis.controlled_environment import TextDataGenerator
-from Sentiment_Analysis.data_loader import get_train_test_split
+os.makedirs("models", exist_ok=True)
 
-from tokenization.preprocess_text import preprocess_text
-
-
-# Load the CSV file
+# Load the pkl file
 print("\nLoading dataset...\n")
 
-with open('data/local_data/generated_data.pkl', 'rb') as f:
+with open('data/local_data/HashT_data/generated_data.pkl', 'rb') as f:
     dataset_train = pickle.load(f)
 print("\nDataset LOADED\n")
 
@@ -33,24 +24,19 @@ train_jobs = [
         "output": "models/BertLoRAWhole",
         "unfreeze": ["lora_", "embeddings", "classifier"]
     },
-    {
-        "input": "FinGPTR1_pipeline/models/Base",
-        "output": "models/BertExtLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/Base",
-        "output": "models/BertExtLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
+    #{
+    #    "input": "FinGPTR1_pipeline/models/Base",
+    #    "output": "models/BertExtLoRA",
+    #    "unfreeze": ["lora_"]
+    #},
+    #{
+    #    "input": "FinGPTR1_pipeline/models/Base",
+    #    "output": "models/BertExtLoRAWhole",
+    #    "unfreeze": ["lora_", "embeddings", "classifier"]
+    #},
     {
         "input": "FinGPTR1_pipeline/models/NoMLP",
         "output": "models/NoMLPLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/bert_version/NoMLP",
-        "output": "models/bert_version/NoMLPLoRA",
         "unfreeze": ["lora_"]
     },
     {
@@ -59,30 +45,15 @@ train_jobs = [
         "unfreeze": ["lora_", "embeddings", "classifier"]
     },
     {
-        "input": "FinGPTR1_pipeline/models/bert_version/NoMLP",
-        "output": "models/bert_version/NoMLPLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
         "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
         "output": "models/NoMLPandGradUnfreezeLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/bert_version/NoMLPandGradUnfreeze",
-        "output": "models/bert_version/NoMLPandGradUnfreezeLoRA",
         "unfreeze": ["lora_"]
     },
     {
         "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
         "output": "models/NoMLPandGradUnfreezeLoRAWhole",
         "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/bert_version/NoMLPandGradUnfreeze",
-        "output": "models/bert_version/NoMLPandGradUnfreezeLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
+    }
 ]
 
 

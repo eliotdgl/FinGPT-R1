@@ -1,25 +1,22 @@
+import os
 import numpy as np
 import pandas as pd
 import torch
-import pickle
-import os
 from tqdm import tqdm
-from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-from Sentiment_Analysis.sentiment_model_class import Sentiment_Analysis_Model
-from Sentiment_Analysis.controlled_environment import TextDataGenerator
-from Sentiment_Analysis.data_loader import get_train_test_split
-
-from tokenization.preprocess_text import preprocess_text
-
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from transformers import pipeline
-
+import matplotlib.pyplot as plt 
 from sklearn.metrics import accuracy_score
 from netcal.metrics import ECE
 from netcal.presentation import ReliabilityDiagram
-import matplotlib.pyplot as plt 
 
+from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
+from sentiment_analysis.controlled_environment import TextDataGenerator
+
+from tokenization.preprocess_text import preprocess_text
+
+os.makedirs("results", exist_ok=True)
+os.makedirs("results/plots", exist_ok=True)
 
 def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, model_name):
     # Accuracy
@@ -44,7 +41,7 @@ def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_
 
     rd = ReliabilityDiagram()
 
-    plot_dir = f"plots/{model_name}"
+    plot_dir = f"results/plots/{model_name}"
     os.makedirs(plot_dir, exist_ok=True)
 
     plt.figure()
@@ -155,20 +152,14 @@ def run_evaluation(model_name, base_path=None, special_tokens=False):
 custom_models = [
     ("BertLoRA", "models/BertLoRA"),
     ("BertLoRAWhole", "models/BertLoRAWhole"),
-    ("BertExtLoRA", "models/BertExtLoRA"),
-    ("BertExtLoRAWhole", "models/BertExtLoRAWhole"),
+    #("BertExtLoRA", "models/BertExtLoRA"),
+    #("BertExtLoRAWhole", "models/BertExtLoRAWhole"),
     ("NoMLPLoRA", "models/NoMLPLoRA"),
-    ("bert_versionNoMLPLoRA", "models/bert_version/NoMLPLoRA"),
     ("NoMLPLoRAWhole", "models/NoMLPLoRAWhole"),
-    ("bert_versionNoMLPLoRAWhole", "models/bert_version/NoMLPLoRAWhole"),
     ("NoMLPandGradUnfreezeLoRA", "models/NoMLPandGradUnfreezeLoRA"),
-    ("bert_versionNoMLPandGradUnfreezeLoRA", "models/bert_version/NoMLPandGradUnfreezeLoRA"),
     ("NoMLPandGradUnfreezeLoRAWhole", "models/NoMLPandGradUnfreezeLoRAWhole"),
-    ("bert_versionNoMLPandGradUnfreezeLoRAWhole", "models/bert_version/NoMLPandGradUnfreezeLoRAWhole"),
     ("NumLogicLoRA", "models/NumLogicLoRA"),
-    ("bert_versionNumLogicLoRA", "models/bert_version/NumLogicLoRA"),
-    ("NumLogicLoRAWhole", "models/NumLogicLoRAWhole"),
-    ("bert_versionNumLogicLoRAWhole", "models/bert_version/NumLogicLoRAWhole")
+    ("NumLogicLoRAWhole", "models/NumLogicLoRAWhole")
 ]
 
 

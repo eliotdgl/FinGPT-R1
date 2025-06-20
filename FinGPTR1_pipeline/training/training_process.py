@@ -3,7 +3,7 @@ from torch import nn
 import os
 import json
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification
 from torch.utils.data import DataLoader
 
 import sys
@@ -77,7 +77,8 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
 def FGPTR1_training(PATH: str,
                     base_model: str = "yiyanghkust/finbert-tone",
                     With_MLP: bool = False,
-                    device = None):
+                    device = None,
+                    numlogic_model = False):
     """
     This function is the entry point for training the FinGPTR1 tokenizer.
     It sets up the device and calls the training loop.
@@ -86,28 +87,32 @@ def FGPTR1_training(PATH: str,
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print('\nImporting base tokenizer and model\n')
+    
     # Load base tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(base_model)
-    model = AutoModelForSequenceClassification.from_pretrained(base_model).to(device)
+    config = AutoConfig.from_pretrained(base_model, num_labels=3)
+    model = AutoModelForSequenceClassification.from_pretrained(base_model, config=config).to(device)
 
     if tokenizer.pad_token is None:
         tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
     old_vocab_len = len(tokenizer)
+    print(old_vocab_len)
 
-    # Import new tokens
-        # Load stock indices vocabulary
-    with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
-        stock_indices = list(json.load(f).values())
-        # Load stock tickers vocabulary
-    with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
-        stock_tickers = json.load(f)
-        # Load numerical vocabulary
-    with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
-        num_tokens = json.load(f)
-        # Load financial vocabulary
-    with open("tokenization/vocabulary/financial_vocab.json", "r") as f:
-        financial_tokens = json.load(f)
+    if not numlogic_model:
+        # Import new tokens
+            # Load stock indices vocabulary
+        with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
+            stock_indices = list(json.load(f).values())
+            # Load stock tickers vocabulary
+        with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
+            stock_tickers = json.load(f)
+            # Load numerical vocabulary
+        with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
+            num_tokens = json.load(f)
+            # Load financial vocabulary
+        with open("tokenization/vocabulary/financial_vocab.json", "r") as f:
+            financial_tokens = json.load(f)
 
     
     def already_in_vocab(tokenizer, tokens):
@@ -115,25 +120,28 @@ def FGPTR1_training(PATH: str,
         for token in tokens:
             if token in existing_vocab:
                 print("Token already in tokenizer's vocab: ", token)
+            else:
+                tokenizer.add_tokens(token)
 
-    already_in_vocab(tokenizer, stock_indices)
-    already_in_vocab(tokenizer, stock_tickers)
-    already_in_vocab(tokenizer, num_tokens)
-    already_in_vocab(tokenizer, financial_tokens)
-    
-    
     # Add new tokens to the tokenizer
-    tokenizer.add_tokens(stock_indices)
-    tokenizer.add_tokens(stock_tickers)
-    tokenizer.add_tokens(financial_tokens)
+    if numlogic_model:
+        special_tokens = ["<SON>", "<VAL>", "<EON>"]
+        tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+        len_vocab_added_stocks_fin = len(tokenizer)
+        new_vocab_len = len(tokenizer)
+    else:        
+        already_in_vocab(tokenizer, stock_indices)
+        already_in_vocab(tokenizer, stock_tickers)
+        already_in_vocab(tokenizer, financial_tokens)
 
-    len_vocab_added_stocks_fin = len(tokenizer)
+        len_vocab_added_stocks_fin = len(tokenizer)
 
-    tokenizer.add_tokens(num_tokens)
+        already_in_vocab(tokenizer, num_tokens)
 
-    new_vocab_len = len(tokenizer)
+        new_vocab_len = len(tokenizer)
 
-
+    print(len_vocab_added_stocks_fin)
+    print(new_vocab_len)
     # Resize the model's embedding layer to accommodate the new added tokens
     model.resize_token_embeddings(new_vocab_len)
 
@@ -189,11 +197,10 @@ def FGPTR1_training(PATH: str,
     os.makedirs(PATH + "/model", exist_ok=True)
     os.makedirs(PATH + "/custom_embeddings", exist_ok=True)
 
-    """
     with torch.no_grad():
         # Update the model's embedding layer
         embedding_layer.weight[old_vocab_len:] = Custom_Embeddings.new_embeddings_layer.weight.clone()
-    """
+    
     tokenizer.save_pretrained(PATH + '/tokenizer')
     model.save_pretrained(PATH + '/model')
 

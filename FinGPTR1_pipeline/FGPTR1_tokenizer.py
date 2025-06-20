@@ -13,7 +13,7 @@ from tokenization.preprocess_text import preprocess_text
 
 class FinGPTR1_Tokenizer(nn.Module):
     def __init__(self, PATH: str,
-                base_model: str = "yiyanghkust/finbert-tone",
+                base_model: str = "bert-base-uncased",
                  task: str = "sentiment analysis",
                  train: bool = False):
         super(FinGPTR1_Tokenizer, self).__init__()
@@ -34,7 +34,7 @@ class FinGPTR1_Tokenizer(nn.Module):
 
         with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "r") as f:
             metadata = json.load(f)
-
+ 
         self.tokenizer = AutoTokenizer.from_pretrained(PATH + '/tokenizer')
         self.model = AutoModelForSequenceClassification.from_pretrained(PATH + '/model').to(self.device)
         
