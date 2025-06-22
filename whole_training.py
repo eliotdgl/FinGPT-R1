@@ -1,3 +1,4 @@
+import os
 import pickle
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 
@@ -13,48 +14,47 @@ print("\nDataset LOADED\n")
 
 # ===== Training =====
 
-train_jobs = [
+bert_train = [
     {
-        "input": None,
+        "input": "BERT/models/BertLoRA",
         "output": "models/BertLoRA",
         "unfreeze": ["lora_"]
     },
     {
-        "input": None,
+        "input": "BERT/models/BertLoRAWhole",
         "output": "models/BertLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    #{
-    #    "input": "FinGPTR1_pipeline/models/Base",
-    #    "output": "models/BertExtLoRA",
-    #    "unfreeze": ["lora_"]
-    #},
-    #{
-    #    "input": "FinGPTR1_pipeline/models/Base",
-    #    "output": "models/BertExtLoRAWhole",
-    #    "unfreeze": ["lora_", "embeddings", "classifier"]
-    #},
-    {
-        "input": "FinGPTR1_pipeline/models/NoMLP",
-        "output": "models/NoMLPLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/NoMLP",
-        "output": "models/NoMLPLoRAWhole",
-        "unfreeze": ["lora_", "embeddings", "classifier"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
-        "output": "models/NoMLPandGradUnfreezeLoRA",
-        "unfreeze": ["lora_"]
-    },
-    {
-        "input": "FinGPTR1_pipeline/models/NoMLPandGradUnfreeze",
-        "output": "models/NoMLPandGradUnfreezeLoRAWhole",
         "unfreeze": ["lora_", "embeddings", "classifier"]
     }
 ]
+
+train_jobs = [
+    {
+        "input": "FinGPTR1_pipeline/models/HashT",
+        "output": "models/HashTLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/HashT",
+        "output": "models/HashTLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/HashTandGradUnfreeze",
+        "output": "models/HashTandGradUnfreezeLoRA",
+        "unfreeze": ["lora_"]
+    },
+    {
+        "input": "FinGPTR1_pipeline/models/HashTandGradUnfreeze",
+        "output": "models/HashTandGradUnfreezeLoRAWhole",
+        "unfreeze": ["lora_", "embeddings", "classifier"]
+    }
+]
+
+for bert_model in bert_train:
+    sentiment_model = Sentiment_Analysis_Model(load_model=True)
+    sentiment_model.load(base_path=bert_model["input"])
+    sentiment_model.train(dataset_train, unfreeze_layers=bert_model["unfreeze"])
+    sentiment_model.save(base_path=bert_model["output"], timestamp_name="1", keep_last=3)
 
 
 for job in train_jobs:

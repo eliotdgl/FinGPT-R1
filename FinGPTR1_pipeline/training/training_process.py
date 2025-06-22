@@ -12,7 +12,7 @@ from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
 
-def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device):
+def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device, numlogic_model: bool = False):
     
     num_epochs = 40
     epoch_bar = tqdm(range(num_epochs), position=0)
@@ -47,7 +47,10 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
             if isinstance(batch_texts, str):
                 batch_texts = [batch_texts]
 
-            preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch_texts])
+            if numlogic_model:
+                preprocessed_batch, batch_numbers_dict = [preprocess_text(text, only_special_tokens=True) for text in batch_texts], None
+            else:
+                preprocessed_batch, batch_numbers_dict = zip(*[preprocess_text(text) for text in batch_texts])
 
             inputs = tokenizer(list(preprocessed_batch), padding=True, truncation=True, return_tensors="pt")
             batch_input_ids = inputs["input_ids"].to(device)
@@ -99,20 +102,20 @@ def FGPTR1_training(PATH: str,
     old_vocab_len = len(tokenizer)
     print(old_vocab_len)
 
+    # Import new tokens
+        # Load stock indices vocabulary
+    with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
+        stock_indices = list(json.load(f).values())
+        # Load stock tickers vocabulary
+    with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
+        stock_tickers = json.load(f)
+        # Load financial vocabulary
+    with open("tokenization/vocabulary/financial_vocab.json", "r") as f:
+        financial_tokens = json.load(f)
     if not numlogic_model:
-        # Import new tokens
-            # Load stock indices vocabulary
-        with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
-            stock_indices = list(json.load(f).values())
-            # Load stock tickers vocabulary
-        with open("tokenization/vocabulary/stock_tickers_vocab.json", "r") as f:
-            stock_tickers = json.load(f)
             # Load numerical vocabulary
         with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
             num_tokens = json.load(f)
-            # Load financial vocabulary
-        with open("tokenization/vocabulary/financial_vocab.json", "r") as f:
-            financial_tokens = json.load(f)
 
     
     def already_in_vocab(tokenizer, tokens):
@@ -127,6 +130,10 @@ def FGPTR1_training(PATH: str,
     if numlogic_model:
         special_tokens = ["<SON>", "<VAL>", "<EON>"]
         tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+        already_in_vocab(tokenizer, stock_indices)
+        already_in_vocab(tokenizer, stock_tickers)
+        already_in_vocab(tokenizer, financial_tokens)
+
         len_vocab_added_stocks_fin = len(tokenizer)
         new_vocab_len = len(tokenizer)
     else:        
@@ -189,7 +196,7 @@ def FGPTR1_training(PATH: str,
     train_loader = DataLoader(list(zip(train_news, train_labels)), batch_size=32, shuffle=True)
     val_loader = DataLoader(list(zip(val_news, val_labels)), batch_size=32, shuffle=False)
 
-    FGPTR1_training_loop(model, tokenizer, Custom_Embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device)
+    FGPTR1_training_loop(model, tokenizer, Custom_Embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device, numlogic_model)
 
     print("\nSpecial tokenizer trained successfully\n")
 

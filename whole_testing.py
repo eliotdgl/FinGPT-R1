@@ -152,21 +152,19 @@ def run_evaluation(model_name, base_path=None, special_tokens=False):
 custom_models = [
     ("BertLoRA", "models/BertLoRA"),
     ("BertLoRAWhole", "models/BertLoRAWhole"),
-    #("BertExtLoRA", "models/BertExtLoRA"),
-    #("BertExtLoRAWhole", "models/BertExtLoRAWhole"),
-    ("NoMLPLoRA", "models/NoMLPLoRA"),
-    ("NoMLPLoRAWhole", "models/NoMLPLoRAWhole"),
-    ("NoMLPandGradUnfreezeLoRA", "models/NoMLPandGradUnfreezeLoRA"),
-    ("NoMLPandGradUnfreezeLoRAWhole", "models/NoMLPandGradUnfreezeLoRAWhole"),
-    ("NumLogicLoRA", "models/NumLogicLoRA"),
-    ("NumLogicLoRAWhole", "models/NumLogicLoRAWhole")
+    ("HashTLoRA", "models/HashTLoRA"),
+    ("HashTLoRAWhole", "models/HashTLoRAWhole"),
+    ("HashTandGradUnfreezeLoRA", "models/HashTandGradUnfreezeLoRA"),
+    ("HashTandGradUnfreezeLoRAWhole", "models/HashTandGradUnfreezeLoRAWhole"),
+    ("DelTLoRA", "models/DelTLoRA"),
+    ("DelTLoRAWhole", "models/DelTLoRAWhole")
 ]
 
 
 for name, path in custom_models:
     sentiment_model = Sentiment_Analysis_Model(load_model=True)
     sentiment_model.load(base_path=path)
-    special_tokens = "NumLogic" in name
+    special_tokens = "DelT" in name
     run_evaluation(name, path, special_tokens=special_tokens)
     print(df_results)
 
