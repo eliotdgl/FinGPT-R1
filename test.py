@@ -102,8 +102,7 @@ def finbert_test(df_results, dataset_gen, dataset_finp, map_num):
     correct_labels_gen = [map_num[num] for num in dataset_gen[1]]
     with torch.no_grad():
         for i, line in tqdm(enumerate(dataset_gen[0])):
-            processed_text, _ = preprocess_text(line)
-            output = nlp(processed_text)
+            output = nlp(line)
             probs_list_gen.append([output[0]['score']])
             pred_labels_gen.append(output[0]['label'].lower())
     
