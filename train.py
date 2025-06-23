@@ -11,7 +11,7 @@ from FinGPTR1_pipeline.training.training_process import FGPTR1_training
 from BERT.bert_training import bert_train, bertec_train
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 
-def train(model: str):
+def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
 
     if model in ['HashT', 'HashTEC']:
         PATH = 'FinGPTR1_pipeline/models/HashT'
