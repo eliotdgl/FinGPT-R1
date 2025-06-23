@@ -78,7 +78,7 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
 
 
 def FGPTR1_training(PATH: str,
-                    base_model: str = "yiyanghkust/finbert-tone",
+                    base_model: str = "bert-base-uncased",
                     With_MLP: bool = False,
                     device = None,
                     numlogic_model = False):

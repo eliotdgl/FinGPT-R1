@@ -1,8 +1,8 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from Sentiment_Analysis.sentiment_model_class import Sentiment_Analysis_Model
-from Sentiment_Analysis.controlled_environment import TextDataGenerator
+from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
+from sentiment_analysis.controlled_environment import TextDataGenerator
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import os
@@ -135,6 +135,12 @@ with open(pkl_path_test, 'wb') as f:
 # -- Generated Data --
 generator=TextDataGenerator(number_of_episode=5)
 generated_data=generator.generate_batch()
+
+gen = sentiment_model.prepare_dataset(generated_data, preprocess = False, numlogic_model = True)
+
+pkl_path = os.path.join('data', 'local_data', 'generated_data.pkl')
+with open(pkl_path, 'wb') as f:
+    pickle.dump(gen, f)
 
     # DelT
 gen_delt = sentiment_model.prepare_dataset(generated_data, numlogic_model = True) 

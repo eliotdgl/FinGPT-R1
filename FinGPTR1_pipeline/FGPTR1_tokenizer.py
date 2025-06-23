@@ -13,7 +13,7 @@ from tokenization.preprocess_text import preprocess_text
 
 class FinGPTR1_Tokenizer(nn.Module):
     def __init__(self, PATH: str,
-                base_model: str = "bert-base-uncased",
+                 base_model: str = "bert-base-uncased",
                  task: str = "sentiment analysis",
                  train: bool = False):
         super(FinGPTR1_Tokenizer, self).__init__()

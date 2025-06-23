@@ -6,9 +6,10 @@ os.makedirs("models", exist_ok=True)
 
 # Load the pkl file
 print("\nLoading dataset...\n")
-
-with open('data/local_data/HashT_data/generated_data.pkl', 'rb') as f:
+with open('data/local_data/generated_data.pkl', 'rb') as f:
     dataset_train = pickle.load(f)
+with open('data/local_data/HashT_data/generated_data.pkl', 'rb') as f:
+    dataset_train_hasht = pickle.load(f)
 print("\nDataset LOADED\n")
 
 
@@ -61,7 +62,7 @@ for job in train_jobs:
     print(f"\nTraining: {job['output']}")
     sentiment_model = Sentiment_Analysis_Model(model_name=job["input"])
     print(f"Model LOADED")
-    sentiment_model.train(dataset_train, unfreeze_layers=job["unfreeze"])
+    sentiment_model.train(dataset_train_hasht, unfreeze_layers=job["unfreeze"])
     print(f"Model TRAINED")
     sentiment_model.save(base_path=job["output"], timestamp_name="1", keep_last=3)
     print(f"Model SAVED to: {job['output']}")

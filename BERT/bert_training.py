@@ -9,17 +9,11 @@ from datasets import load_dataset, Dataset
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-os.makedirs("BERT/models", exist_ok=True)
-
-base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
-base_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-
-mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
 
 def compute_metrics(pred):
-    labels = pred.label_ids
-    preds = np.argmax(pred.predictions, axis=1)
-    return {"accuracy": accuracy_score(labels, preds)}
+        labels = pred.label_ids
+        preds = np.argmax(pred.predictions, axis=1)
+        return {"accuracy": accuracy_score(labels, preds)}
 
 def tokenize(example):
     tok = base_tokenizer(
@@ -31,106 +25,136 @@ def tokenize(example):
     tok["labels"] = mapping[example["Label"]]
     return tok
 
-train_data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
 
-dataset = train_data.map(tokenize)['train']
-dataset_splits = dataset.train_test_split(test_size=0.2)
+def bert_train():
+    base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
+    base_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
-lora_config = LoraConfig(
-    r=8,
-    lora_alpha=32,
-    target_modules=["query", "key", "value"],
-    lora_dropout=0.05,
-    bias="none",
-    task_type=TaskType.SEQ_CLS
-)
+    mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
 
-epochs = 3
-batch_size = 16
+    train_data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
 
-# LoRA
-unfreeze_layers = ['lora_']
-lora_model = get_peft_model(base_model, lora_config)
-output_dir = 'BERT/models/BertLoRA_'
+    dataset = train_data.map(tokenize)['train']
+    dataset_splits = dataset.train_test_split(test_size=0.2)
 
-for name, param in lora_model.named_parameters():
-    param.requires_grad = False
-        
-for name, param in lora_model.named_parameters():
-    if any(key in name for key in unfreeze_layers):
-        param.requires_grad = True
+    lora_config = LoraConfig(
+        r=8,
+        lora_alpha=32,
+        target_modules=["query", "key", "value"],
+        lora_dropout=0.05,
+        bias="none",
+        task_type=TaskType.SEQ_CLS
+    )
 
-training_args = TrainingArguments(
-    output_dir=output_dir,
-    eval_strategy="epoch",
-    save_strategy="epoch",
-    per_device_train_batch_size=batch_size,
-    num_train_epochs=epochs,
-    weight_decay=0.01,
-    logging_dir=os.path.join(output_dir, "logs"),
-    logging_steps=10,
-    save_total_limit=2,
-    load_best_model_at_end=True,
-    metric_for_best_model="accuracy",
-    greater_is_better=True
-)
+    epochs = 3
+    batch_size = 16
 
-trainer = Trainer(
-    model=lora_model,
-    args=training_args,
-    train_dataset=dataset_splits["train"],
-    eval_dataset=dataset_splits["test"],
-    tokenizer=base_tokenizer,
-    compute_metrics=compute_metrics,
-)
+    unfreeze_layers = ['lora_']
+    lora_model = get_peft_model(base_model, lora_config)
+    output_dir = 'BERT/models/BertLoRA_'
 
-trainer.train()
+    for name, param in lora_model.named_parameters():
+        param.requires_grad = False
+            
+    for name, param in lora_model.named_parameters():
+        if any(key in name for key in unfreeze_layers):
+            param.requires_grad = True
 
-lora_model.base_model.save_pretrained(output_dir)
-lora_model.save_pretrained(output_dir)
-base_tokenizer.save_pretrained(output_dir)
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        per_device_train_batch_size=batch_size,
+        num_train_epochs=epochs,
+        weight_decay=0.01,
+        logging_dir=os.path.join(output_dir, "logs"),
+        logging_steps=10,
+        save_total_limit=2,
+        load_best_model_at_end=True,
+        metric_for_best_model="accuracy",
+        greater_is_better=True
+    )
+
+    trainer = Trainer(
+        model=lora_model,
+        args=training_args,
+        train_dataset=dataset_splits["train"],
+        eval_dataset=dataset_splits["test"],
+        tokenizer=base_tokenizer,
+        compute_metrics=compute_metrics,
+    )
+
+    trainer.train()
+
+    lora_model.base_model.save_pretrained(output_dir)
+    lora_model.save_pretrained(output_dir)
+    base_tokenizer.save_pretrained(output_dir)
+
+    pass
 
 
-# LoRAWhole
-base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
+def bertec_train():
+    base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
+    base_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
-unfreeze_layers = ["lora_", "embeddings", "classifier"]
-lora_model = get_peft_model(base_model, lora_config)
-output_dir = 'BERT/models/BertLoRAWhole_'
+    mapping = {'neutral': 0, 'positive': 1, 'negative': 2}
 
-for name, param in lora_model.named_parameters():
-    param.requires_grad = False
-        
-for name, param in lora_model.named_parameters():
-    if any(key in name for key in unfreeze_layers):
-        param.requires_grad = True
+    train_data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
 
-training_args = TrainingArguments(
-    output_dir=output_dir,
-    eval_strategy="epoch",
-    save_strategy="epoch",
-    per_device_train_batch_size=batch_size,
-    num_train_epochs=epochs,
-    weight_decay=0.01,
-    logging_dir=os.path.join(output_dir, "logs"),
-    logging_steps=10,
-    save_total_limit=2,
-    load_best_model_at_end=True,
-    metric_for_best_model="accuracy",
-    greater_is_better=True
-)
+    dataset = train_data.map(tokenize)['train']
+    dataset_splits = dataset.train_test_split(test_size=0.2)
 
-trainer = Trainer(
-    model=lora_model,
-    args=training_args,
-    train_dataset=dataset_splits["train"],
-    eval_dataset=dataset_splits["test"],
-    tokenizer=base_tokenizer,
-    compute_metrics=compute_metrics,
-)
+    lora_config = LoraConfig(
+        r=8,
+        lora_alpha=32,
+        target_modules=["query", "key", "value"],
+        lora_dropout=0.05,
+        bias="none",
+        task_type=TaskType.SEQ_CLS
+    )
 
-trainer.train()
+    epochs = 3
+    batch_size = 16
+    
+    unfreeze_layers = ["lora_", "embeddings", "classifier"]
+    lora_model = get_peft_model(base_model, lora_config)
+    output_dir = 'BERT/models/BertLoRAWhole_'
 
-lora_model.base_model.save_pretrained(output_dir)
-lora_model.save_pretrained(output_dir)
-base_tokenizer.save_pretrained(output_dir)
+    for name, param in lora_model.named_parameters():
+        param.requires_grad = False
+            
+    for name, param in lora_model.named_parameters():
+        if any(key in name for key in unfreeze_layers):
+            param.requires_grad = True
+
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        per_device_train_batch_size=batch_size,
+        num_train_epochs=epochs,
+        weight_decay=0.01,
+        logging_dir=os.path.join(output_dir, "logs"),
+        logging_steps=10,
+        save_total_limit=2,
+        load_best_model_at_end=True,
+        metric_for_best_model="accuracy",
+        greater_is_better=True
+    )
+
+    trainer = Trainer(
+        model=lora_model,
+        args=training_args,
+        train_dataset=dataset_splits["train"],
+        eval_dataset=dataset_splits["test"],
+        tokenizer=base_tokenizer,
+        compute_metrics=compute_metrics,
+    )
+
+    trainer.train()
+
+    lora_model.base_model.save_pretrained(output_dir)
+    lora_model.save_pretrained(output_dir)
+    base_tokenizer.save_pretrained(output_dir)
+
+    pass

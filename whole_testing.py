@@ -115,7 +115,7 @@ evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labe
 # ====================
 
 
-def run_evaluation(model_name, base_path=None, special_tokens=False):
+def run_evaluation(model_name, special_tokens=False):
     print(f"\nEvaluating: {model_name}")
 
     pred_labels_finp = []
@@ -165,7 +165,7 @@ for name, path in custom_models:
     sentiment_model = Sentiment_Analysis_Model(load_model=True)
     sentiment_model.load(base_path=path)
     special_tokens = "DelT" in name
-    run_evaluation(name, path, special_tokens=special_tokens)
+    run_evaluation(name, special_tokens=special_tokens)
     print(df_results)
 
 print("\n\nFinal results:\n\n", df_results)
