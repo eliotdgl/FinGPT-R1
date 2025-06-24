@@ -17,16 +17,17 @@ print("\nDataset LOADED\n")
 
 bert_train = [
     {
-        "input": "BERT/models/BertLoRA",
+        "input": None,
         "output": "models/BertLoRA",
         "unfreeze": ["lora_"]
     },
     {
-        "input": "BERT/models/BertLoRAWhole",
+        "input": None,
         "output": "models/BertLoRAWhole",
         "unfreeze": ["lora_", "embeddings", "classifier"]
     }
 ]
+
 
 train_jobs = [
     {
@@ -50,15 +51,15 @@ train_jobs = [
         "unfreeze": ["lora_", "embeddings", "classifier"]
     }
 ]
-
+"""
 for bert_model in bert_train:
     sentiment_model = Sentiment_Analysis_Model(load_model=True)
     sentiment_model.load(base_path=bert_model["input"])
     sentiment_model.train(dataset_train, unfreeze_layers=bert_model["unfreeze"])
     sentiment_model.save(base_path=bert_model["output"], timestamp_name="1", keep_last=3)
+"""
 
-
-for job in train_jobs:
+for job in bert_train:
     print(f"\nTraining: {job['output']}")
     sentiment_model = Sentiment_Analysis_Model(model_name=job["input"])
     print(f"Model LOADED")

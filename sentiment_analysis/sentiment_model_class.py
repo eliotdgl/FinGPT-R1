@@ -132,7 +132,7 @@ class Sentiment_Analysis_Model:
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-    def train(self, input_dataset, output_dir: str = "sentiment_analysis/models/sft-sentiment-model", unfreeze_layers: list = ['lora_'], epochs = 3, batch_size = 16):
+    def train(self, input_dataset, output_dir: str = "sentiment_analysis/logs/sft-sentiment-model", unfreeze_layers: list = ['lora_'], epochs = 3, batch_size = 16):
         dataset = input_dataset.map(self._tokenize)
         print("\nTraining started\n")
         if not self.model or not self.tokenizer:
@@ -179,7 +179,7 @@ class Sentiment_Analysis_Model:
         trainer.train()
 
 
-    def save(self, base_path="Sentiment_Analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
+    def save(self, base_path="sentiment_analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
         """
         Save the current model (with LoRA adapters, if any) and tokenizer to a timestamped folder.
         Keeps only the `keep_last` most recent saved versions.
@@ -219,7 +219,7 @@ class Sentiment_Analysis_Model:
                 print(f"Warning: could not delete {old_path}: {e}")
 
 
-    def load(self, base_path="Sentiment_Analysis/models/sft-sentiment-model"):
+    def load(self, base_path="sentiment_analysis/models/sft-sentiment-model"):
     # 1. Locate the most recent version
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
@@ -232,7 +232,7 @@ class Sentiment_Analysis_Model:
         self.tokenizer = AutoTokenizer.from_pretrained(latest_version)
 
     # 3. Load config + base model
-        config = AutoConfig.from_pretrained(latest_version)
+        config = AutoConfig.from_pretrained(latest_version, local_files_only=True)
         config.num_labels = len(self.label_map)
         base_model = AutoModelForSequenceClassification.from_pretrained(
         latest_version, config=config

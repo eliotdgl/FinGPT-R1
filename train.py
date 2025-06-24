@@ -35,17 +35,19 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
             sentiment_model.train(dataset_train_delt, unfreeze_layers = ["lora_", "embeddings", "classifier"])
             sentiment_model.save(base_path='models/DelTLoRAEC', timestamp_name="1", keep_last=3)
     
-    elif model in ['BERT', 'BERTEC']:
+    elif model in ['Bert', 'BertEC']:
         os.makedirs("BERT/models", exist_ok=True)
-        sentiment_model = Sentiment_Analysis_Model(load_model=True)
-        if model == 'BERT':
+        if model == 'Bert':
             bert_train()
-            sentiment_model.load(base_path="BERT/models/BertLoRA")
+            #sentiment_model = Sentiment_Analysis_Model(load_model =True)
+            #sentiment_model.load("BERT/models/BertLoRA")
+            sentiment_model = Sentiment_Analysis_Model(model_name="BERT/models/BertLoRA", bert_model = True)
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_"])
             sentiment_model.save(base_path="models/BertLoRA", timestamp_name="1", keep_last=3)
         else:
             bertec_train()
-            sentiment_model.load(base_path="BERT/models/BertLoRAWhole")
+            sentiment_model = Sentiment_Analysis_Model(load_model=True)
+            sentiment_model.load("BERT/models/BertLoRAWhole")
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_", "embeddings", "classifier"])
             sentiment_model.save(base_path="models/BertLoRAEC", timestamp_name="1", keep_last=3)
     else:
@@ -55,7 +57,7 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
 
 
 if __name__ == "__main__":
-    valid_models = ['BERT', 'BERTEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC', 'all']
+    valid_models = ['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC', 'all']
     parser = argparse.ArgumentParser(description="Train Model")
     parser.add_argument("--model", 
         nargs="+",
@@ -67,7 +69,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if 'all' in args.model:
-        models_to_train = ['BERT', 'BERTEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC']
+        models_to_train = ['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC']
     else:
         models_to_train = args.model
 

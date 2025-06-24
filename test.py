@@ -61,11 +61,14 @@ def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_
     pass
 
 def get_data():
-    df_results = pd.DataFrame(columns=[
-        "Accuracy on FinP", "Accuracy on GenData",
-        "Avg Confidence on FinP", "Avg Confidence on Gen",
-        "ECE on FinP", "ECE on Gen"
-    ])
+    if os.path.exists("results/model_comparison.csv"):
+        df_results = pd.read_csv("results/model_comparison.csv")
+    else:
+        df_results = pd.DataFrame(columns=[
+            "Accuracy on FinP", "Accuracy on GenData",
+            "Avg Confidence on FinP", "Avg Confidence on Gen",
+            "ECE on FinP", "ECE on Gen"
+        ])
 
     generator = TextDataGenerator()
     dataset_gen = generator.generate_batch()
@@ -156,7 +159,7 @@ def test(model: str, df_results, dataset_gen, dataset_finp, map_num, sentiment_m
 
 if __name__ == "__main__":
     try:
-        trained_models = [name for name in os.listdir("models") if os.path.isdir(os.path.join("models", name))]
+        trained_models = [name[:-2] for name in os.listdir("models") if os.path.isdir(os.path.join("models", name))]
     except FileNotFoundError:
         raise ValueError("No trained model found.")
         
@@ -178,10 +181,12 @@ if __name__ == "__main__":
         models_to_test = args.model
     
     df_results, dataset_gen, dataset_finp, map_num = get_data()
+    print(models_to_test)
     for model in models_to_test:
         print(f"\n==== Testing {model} ====\n")
         sentiment_model = Sentiment_Analysis_Model(load_model=True)
         path = 'models/' + model
+        print(path)
         sentiment_model.load(base_path=path)
         special_tokens = "DelT" in model
         bert_model = 'bert' in model.lower()

@@ -15,15 +15,6 @@ def compute_metrics(pred):
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-def tokenize(example):
-    tok = base_tokenizer(
-    example["Sentence"],
-    truncation=True,
-    padding="longest",
-    max_length=128,
-    )
-    tok["labels"] = mapping[example["Label"]]
-    return tok
 
 
 def bert_train():
@@ -34,6 +25,15 @@ def bert_train():
 
     train_data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
 
+    def tokenize(example):
+        tok = base_tokenizer(
+        example["Sentence"],
+        truncation=True,
+        padding="longest",
+        max_length=128,
+        )
+        tok["labels"] = mapping[example["Label"]]
+        return tok
     dataset = train_data.map(tokenize)['train']
     dataset_splits = dataset.train_test_split(test_size=0.2)
 
@@ -51,7 +51,7 @@ def bert_train():
 
     unfreeze_layers = ['lora_']
     lora_model = get_peft_model(base_model, lora_config)
-    output_dir = 'BERT/models/BertLoRA_'
+    output_dir = 'BERT/models/BertLoRA_1'
 
     for name, param in lora_model.named_parameters():
         param.requires_grad = False
@@ -101,6 +101,15 @@ def bertec_train():
 
     train_data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
 
+    def tokenize(example):
+        tok = base_tokenizer(
+        example["Sentence"],
+        truncation=True,
+        padding="longest",
+        max_length=128,
+        )
+        tok["labels"] = mapping[example["Label"]]
+        return tok
     dataset = train_data.map(tokenize)['train']
     dataset_splits = dataset.train_test_split(test_size=0.2)
 
@@ -118,7 +127,7 @@ def bertec_train():
     
     unfreeze_layers = ["lora_", "embeddings", "classifier"]
     lora_model = get_peft_model(base_model, lora_config)
-    output_dir = 'BERT/models/BertLoRAWhole_'
+    output_dir = 'BERT/models/BertLoRAWhole_1'
 
     for name, param in lora_model.named_parameters():
         param.requires_grad = False

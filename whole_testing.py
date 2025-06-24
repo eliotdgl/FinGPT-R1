@@ -151,13 +151,13 @@ def run_evaluation(model_name, special_tokens=False):
 
 custom_models = [
     ("BertLoRA", "models/BertLoRA"),
-    ("BertLoRAWhole", "models/BertLoRAWhole"),
-    ("HashTLoRA", "models/HashTLoRA"),
-    ("HashTLoRAWhole", "models/HashTLoRAWhole"),
-    ("HashTandGradUnfreezeLoRA", "models/HashTandGradUnfreezeLoRA"),
-    ("HashTandGradUnfreezeLoRAWhole", "models/HashTandGradUnfreezeLoRAWhole"),
-    ("DelTLoRA", "models/DelTLoRA"),
-    ("DelTLoRAWhole", "models/DelTLoRAWhole")
+    #("BertLoRAWhole", "models/BertLoRAWhole"),
+    #("HashTLoRA", "models/HashTLoRA"),
+    #("HashTLoRAWhole", "models/HashTLoRAWhole"),
+    #("HashTandGradUnfreezeLoRA", "models/HashTandGradUnfreezeLoRA"),
+    #("HashTandGradUnfreezeLoRAWhole", "models/HashTandGradUnfreezeLoRAWhole"),
+    #("DelTLoRA", "models/DelTLoRA"),
+    #("DelTLoRAWhole", "models/DelTLoRAWhole")
 ]
 
 
