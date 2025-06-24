@@ -45,6 +45,7 @@ class Sentiment_Analysis_Model:
                 task_type=TaskType.SEQ_CLS
             )
             self.model = get_peft_model(self.model, lora_config)  # Only wrap here
+
         elif not load_model and model_name is None:
             self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
             self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -59,6 +60,7 @@ class Sentiment_Analysis_Model:
                 task_type=TaskType.SEQ_CLS
             )
             self.model = get_peft_model(self.model, lora_config)
+
         else:
             self.tokenizer = None
             self.model = None
@@ -196,6 +198,8 @@ class Sentiment_Analysis_Model:
         if isinstance(self.model, PeftModel):
         # Save base model
             self.model.base_model.save_pretrained(save_path)
+        # Save config
+            self.model.base_model.config.save_pretrained(save_path) 
         # Save LoRA adapters
             self.model.save_pretrained(save_path)
         else:
@@ -235,11 +239,11 @@ class Sentiment_Analysis_Model:
         config = AutoConfig.from_pretrained(latest_version, local_files_only=True)
         config.num_labels = len(self.label_map)
         base_model = AutoModelForSequenceClassification.from_pretrained(
-        latest_version, config=config
+        latest_version, config=config, local_files_only=True
         )
 
     # 4. Load PEFT adapters (restores your trained LoRA weights)
-        self.model = PeftModel.from_pretrained(base_model, latest_version)
+        self.model = PeftModel.from_pretrained(base_model, latest_version, local_files_only=True)
 
         print("\nModel and LoRA adapters successfully loaded.\n")
 

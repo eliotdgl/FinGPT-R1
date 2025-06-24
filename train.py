@@ -39,9 +39,8 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
         os.makedirs("BERT/models", exist_ok=True)
         if model == 'Bert':
             bert_train()
-            #sentiment_model = Sentiment_Analysis_Model(load_model =True)
-            #sentiment_model.load("BERT/models/BertLoRA")
-            sentiment_model = Sentiment_Analysis_Model(model_name="BERT/models/BertLoRA", bert_model = True)
+            sentiment_model = Sentiment_Analysis_Model(load_model =True)
+            sentiment_model.load("BERT/models/BertLoRA")
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_"])
             sentiment_model.save(base_path="models/BertLoRA", timestamp_name="1", keep_last=3)
         else:
