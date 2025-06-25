@@ -1,10 +1,17 @@
+"""
+    == training_process.py ==
+    
+    Train FinGPTR1 sentiment classification model using a pre-trained transformer model (here BERT),
+    extended with custom domain-specific tokens (e.g., stock tickers, numericals).
+    Supports training with gradual unfreezing and optional MLP.
+"""
 import torch
-from torch import nn
 import os
 import json
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification
 from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -12,8 +19,14 @@ from FinGPTR1_pipeline.custom_embeddings import CustomEmbeddings
 from tokenization.preprocess_text import preprocess_text
 
 
-def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device, numlogic_model: bool = False):
-    
+def FGPTR1_training_loop(model, tokenizer,
+                         custom_embeddings: CustomEmbeddings, unfreeze_schedule, 
+                         train_loader: DataLoader, val_loader: DataLoader, 
+                         With_MLP: bool, device: torch.device, numlogic_model: bool = False) -> None:
+    """
+        Trains the model using custom embeddings.
+        Supports gradual unfreezing.
+    """
     num_epochs = 40
     epoch_bar = tqdm(range(num_epochs), position=0)
 
@@ -76,22 +89,19 @@ def FGPTR1_training_loop(model, tokenizer, custom_embeddings, unfreeze_schedule,
         print(f"\nTraining Tokenizer with the {n}th layers unfrozen | Epoch {epoch+1} training loss: {epoch_loss} / val loss: {val_loss}")
 
 
-
 def FGPTR1_training(PATH: str,
                     base_model: str = "bert-base-uncased",
                     With_MLP: bool = False,
                     device = None,
-                    numlogic_model = False):
+                    numlogic_model = False) -> None:
     """
-    This function is the entry point for training the FinGPTR1 tokenizer.
-    It sets up the device and calls the training loop.
+        Entry point for training the FinGPTR1 model.
+        Sets up model, tokenizer, vocabulary expansion, data, and training.
     """
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print('\nImporting base tokenizer and model\n')
-    
-    # Load base tokenizer and model
+    # Load base model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model)
     config = AutoConfig.from_pretrained(base_model, num_labels=3)
     model = AutoModelForSequenceClassification.from_pretrained(base_model, config=config).to(device)
@@ -100,9 +110,8 @@ def FGPTR1_training(PATH: str,
         tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
     old_vocab_len = len(tokenizer)
-    print(old_vocab_len)
 
-    # Import new tokens
+    # Import new vocabularies
         # Load stock indices vocabulary
     with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
         stock_indices = list(json.load(f).values())
@@ -118,7 +127,7 @@ def FGPTR1_training(PATH: str,
             num_tokens = json.load(f)
 
     
-    def already_in_vocab(tokenizer, tokens):
+    def already_in_vocab(tokenizer, tokens) -> None:
         existing_vocab = set(tokenizer.get_vocab().keys())
         for token in tokens:
             if token in existing_vocab:
@@ -147,55 +156,32 @@ def FGPTR1_training(PATH: str,
 
         new_vocab_len = len(tokenizer)
 
-    print(len_vocab_added_stocks_fin)
-    print(new_vocab_len)
-    # Resize the model's embedding layer to accommodate the new added tokens
+    # Resize model's embedding layer
     model.resize_token_embeddings(new_vocab_len)
 
-    # Get embedding layer of Llama model
     embedding_layer = model.get_input_embeddings()
 
     Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, len_vocab_added_stocks_fin, new_vocab_len, With_MLP, device).to(device)
 
-    #from datasets import load_from_disk
-    #data = load_from_disk("data/nifty_dataset_local")
-    #train_data = data["train"].to_pandas()
-    #val_data = data["valid"].to_pandas()
-    
-    #train_data = train_data[train_data["news"].str.len() <= 500]
-    #val_data = val_data[val_data["news"].str.len() <= 500]
-
-    #train_news = train_data["news"].tolist()
-    #train_labels = train_data["label"].tolist()
-
-    #val_news = val_data["news"].tolist()
-    #val_labels = val_data["label"].tolist()
-
-    #label_map = {"Neutral": 0, "Rise": 1, "Fall": 2}  # Map sentiment classes
-    from datasets import load_dataset
     data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
-    from sklearn.model_selection import train_test_split
     train_news, val_news, train_labels, val_labels = train_test_split(data["train"]["Sentence"], data["train"]["Label"], test_size=0.1)
-
-    label_map = {"neutral": 0, "positive": 1, "negative": 2}  # Map sentiment classes
-    #labels = [label_map[label] for label in labels]
+    label_map = {"neutral": 0, "positive": 1, "negative": 2}
     train_labels = [label_map[label] for label in train_labels]
     val_labels = [label_map[label] for label in val_labels]
-    
+    train_loader = DataLoader(list(zip(train_news, train_labels)), batch_size=32, shuffle=True)
+    val_loader = DataLoader(list(zip(val_news, val_labels)), batch_size=32, shuffle=False)
 
     # Freeze base model
     for param in model.parameters():
         param.requires_grad = False
 
-
+    # Set unfreeze schedule
     if 'GradUnfreeze' in PATH:
         unfreeze_schedule = {0: 0, 10: 1, 20: 3, 30: 5}
     else:
         unfreeze_schedule = {0: 0}
 
-    train_loader = DataLoader(list(zip(train_news, train_labels)), batch_size=32, shuffle=True)
-    val_loader = DataLoader(list(zip(val_news, val_labels)), batch_size=32, shuffle=False)
-
+    # Start training
     FGPTR1_training_loop(model, tokenizer, Custom_Embeddings, unfreeze_schedule, train_loader, val_loader, With_MLP, device, numlogic_model)
 
     print("\nSpecial tokenizer trained successfully\n")
@@ -224,7 +210,10 @@ def FGPTR1_training(PATH: str,
     print(f"\nFinGPTR1 Model saved successfully: {PATH}\n")
 
 
-def unfreeze_last_n_layers(model, n=0):
+def unfreeze_last_n_layers(model, n: int = 0) -> None:
+    """
+        Unfreezes the last `n` encoder layers in the transformer.
+    """
     if n == 0:
         pass
     transformer_layers = model.bert.encoder.layer
@@ -234,7 +223,10 @@ def unfreeze_last_n_layers(model, n=0):
     print(f"\n-- Unfreezing last {n} layer(s) of the model --\n")
 
 
-def evaluate(model, custom_embeddings, dataloader, tokenizer, device):
+def evaluate(model, custom_embeddings: CustomEmbeddings, dataloader: DataLoader, tokenizer, device: torch.device) -> float:
+    """
+        Evaluates the model on the validation set.
+    """
     model.eval()
     custom_embeddings.eval()
     total_loss = 0
