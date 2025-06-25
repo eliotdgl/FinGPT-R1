@@ -1,25 +1,48 @@
+"""
+    == sentiment_model_class.py ==
+    Sentiment Analysis Model with LoRA fine-tuning
+    
+    Defines a class `Sentiment_Analysis_Model` for training,
+    saving, loading, and inference of a sentiment analysis model
+    based on Hugging Face Transformers and PEFT (LoRA) adapters.
+
+    Usage:
+        Instantiate the `Sentiment_Analysis_Model` class,
+        call `train()` with your dataset,
+        save the model with `save()`,
+        load it later with `load()`,
+        and predict using `predict()`.
+    
+        Example:
+            model = Sentiment_Analysis_Model(model_name="bert-base-uncased")
+            dataset = model.prepare_dataset("path/to/data.csv")
+            model.train(dataset)
+            model.save()
+            probs, label = model.predict(`sentence`)
+"""
+import os
+import numpy as np
+import pandas as pd
 import torch
+import torch.nn.functional as F
+from datasets import Dataset
+from sklearn.metrics import accuracy_score
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification,
     Trainer, TrainingArguments, AutoConfig
 )
-from datasets import Dataset
-import numpy as np
-from sklearn.metrics import accuracy_score
-import os
-import pandas as pd
-import datetime
+from peft import get_peft_model, LoraConfig, TaskType, PeftModel
 import glob
 import shutil
-import torch.nn.functional as F
-from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
+import datetime
+
 import sys
-import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tokenization.preprocess_text import preprocess_text
 
+
 class Sentiment_Analysis_Model:
-    def __init__(self, model_name=None, label_map=None, load_model=False, num_label=3):
+    def __init__(self, model_name = None, label_map = None, load_model: bool = False, num_label: int = 3):
         self.label_map = label_map or {-1: 2, 0: 0, 1: 1}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
         self.label_names = ["neutral", "positive", "negative"]
@@ -44,7 +67,7 @@ class Sentiment_Analysis_Model:
                 bias="none",
                 task_type=TaskType.SEQ_CLS
             )
-            self.model = get_peft_model(self.model, lora_config)  # Only wrap here
+            self.model = get_peft_model(self.model, lora_config)
 
         elif not load_model and model_name is None:
             self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
@@ -66,8 +89,10 @@ class Sentiment_Analysis_Model:
             self.model = None
 
         
-    def prepare_dataset(self, raw_input, preprocess: bool = True, numlogic_model: bool = False):
-        # Load raw data
+    def prepare_dataset(self, raw_input, preprocess: bool = True, numlogic_model: bool = False) -> datasets.Dataset:
+        """
+            Prepares a HuggingFace dataset from raw input.
+        """
         if isinstance(raw_input, list) and len(raw_input) == 2:
             texts, labels = raw_input
             labels = [int(label) for label in labels]
@@ -80,7 +105,6 @@ class Sentiment_Analysis_Model:
         else:
             raise ValueError("Input must be a CSV path or list of dicts/lists.")
 
-        # Remap labels
         if preprocess:
             if numlogic_model:
                 label_values = set(ex["label"] for ex in raw_examples)
@@ -119,31 +143,44 @@ class Sentiment_Analysis_Model:
         dataset = Dataset.from_list(new_examples)
         return dataset
 
+
     def _tokenize(self, example):
+        """
+            Tokenize a single example for model input.
+        """
         tok = self.tokenizer(
-        example["text"],
-        truncation=True,
-        padding="max_length",
-        max_length=128,
+            example["text"],
+            truncation=True,
+            padding="max_length",
+            max_length=128,
         )
         tok["labels"] = example["label"]
         return tok
 
-    def compute_metrics(self, pred):
+    
+    def compute_metrics(self, pred) -> dict:
+        """
+            Computes accuracy from predictions and true labels.
+        """
         labels = pred.label_ids
         preds = np.argmax(pred.predictions, axis=1)
         return {"accuracy": accuracy_score(labels, preds)}
 
-    def train(self, input_dataset, output_dir: str = "sentiment_analysis/logs/sft-sentiment-model", unfreeze_layers: list = ['lora_'], epochs = 3, batch_size = 16):
+    
+    def train(self, input_dataset, output_dir: str = "sentiment_analysis/logs/sft-sentiment-model", unfreeze_layers: list = ['lora_'],
+              epochs: int = 3, batch_size: int = 16) -> None:
+        """
+            Trains the sentiment analysis model.
+        """
         dataset = input_dataset.map(self._tokenize)
-        print("\nTraining started\n")
         if not self.model or not self.tokenizer:
             raise RuntimeError("\nModel is not loaded/initialized. Call load() first or initialize a new one.\n")
         dataset_splits = dataset.train_test_split(test_size=0.2)
-        
+
+        # Freeze all parameters
         for name, param in self.model.named_parameters():
             param.requires_grad = False
-        
+        # Unfreeze specified layers
         for name, param in self.model.named_parameters():
             if any(key in name for key in unfreeze_layers):
                 param.requires_grad = True
@@ -181,20 +218,17 @@ class Sentiment_Analysis_Model:
         trainer.train()
 
 
-    def save(self, base_path="sentiment_analysis/models/sft-sentiment-model", timestamp_name=None, keep_last=3):
+    def save(self, base_path: str = "sentiment_analysis/models/sft-sentiment-model", timestamp_name = None, keep_last: int = 3) -> None:
         """
-        Save the current model (with LoRA adapters, if any) and tokenizer to a timestamped folder.
-        Keeps only the `keep_last` most recent saved versions.
+            Saves the current model (with LoRA adapters, if any) and tokenizer to a timestamped folder.
+            Keeps only the `keep_last` most recent saved versions.
         """
-    # 1. Determine timestamp
         if timestamp_name is None:
             timestamp_name = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # 2. Build save path and create directory
         save_path = f"{base_path}_{timestamp_name}"
         os.makedirs(save_path, exist_ok=True)
 
-    # 3. Save model weights and adapters
         if isinstance(self.model, PeftModel):
         # Save base model
             self.model.base_model.save_pretrained(save_path)
@@ -206,15 +240,13 @@ class Sentiment_Analysis_Model:
         # Standard model save
             self.model.save_pretrained(save_path)
 
-    # 4. Save tokenizer
+        # Save tokenizer
         self.tokenizer.save_pretrained(save_path)
 
         print(f"\nModel and tokenizer saved to: {save_path}\n")
 
-    # 5. Cleanup old versions
         pattern = f"{base_path}_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
-    # Keep only the most recent `keep_last` folders
         for old_path in saved_versions[keep_last:]:
             try:
                 shutil.rmtree(old_path)
@@ -223,8 +255,10 @@ class Sentiment_Analysis_Model:
                 print(f"Warning: could not delete {old_path}: {e}")
 
 
-    def load(self, base_path="sentiment_analysis/models/sft-sentiment-model"):
-    # 1. Locate the most recent version
+    def load(self, base_path: str = "sentiment_analysis/models/sft-sentiment-model") -> None:
+        """
+            Loads the most recent saved model and tokenizer including LoRA adapters.
+        """
         pattern = base_path + "_*"
         saved_versions = sorted(glob.glob(pattern), reverse=True)
         if not saved_versions:
@@ -232,22 +266,23 @@ class Sentiment_Analysis_Model:
         latest_version = saved_versions[0]
         print(f"\nLoading the latest model from: {latest_version}\n")
 
-    # 2. Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(latest_version)
 
-    # 3. Load config + base model
         config = AutoConfig.from_pretrained(latest_version, local_files_only=True)
         config.num_labels = len(self.label_map)
         base_model = AutoModelForSequenceClassification.from_pretrained(
         latest_version, config=config, local_files_only=True
         )
 
-    # 4. Load PEFT adapters (restores your trained LoRA weights)
         self.model = PeftModel.from_pretrained(base_model, latest_version, local_files_only=True)
 
         print("\nModel and LoRA adapters successfully loaded.\n")
 
-    def predict(self, text):
+
+    def predict(self, text: str) -> tuple:
+        """"
+            Predicts sentiment label and probabilities for a given text.
+        """
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("\nModel is not loaded. Call load() first.\n")
     
@@ -256,10 +291,8 @@ class Sentiment_Analysis_Model:
         with torch.no_grad():
             logits = self.model(**inputs).logits
 
-    # Convert logits to probabilities
         probabilities = F.softmax(logits, dim=1).squeeze().tolist()
 
-    # Get predicted class index and label
         pred_id = torch.argmax(logits, dim=1).item()
         pred_label = self.label_names[pred_id]
         return probabilities, pred_label
