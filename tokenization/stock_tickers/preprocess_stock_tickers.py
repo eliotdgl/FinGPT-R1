@@ -1,6 +1,6 @@
 import re
-
 import json 
+
     # Load stock indices vocabulary
 with open("tokenization/vocabulary/stock_indices_vocab.json", "r") as f:
     tokenized_stock_indices = json.load(f)
@@ -47,9 +47,6 @@ def preprocess_stocks(text: str)->str:
    preprocessed_stocks_text = preprocess_stock_indices(text)
    preprocessed_stocks_text = preprocess_stock_tickers(preprocessed_stocks_text)
    return preprocessed_stocks_text
-
-
-
 
 
 """
