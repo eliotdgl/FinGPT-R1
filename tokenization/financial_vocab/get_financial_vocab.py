@@ -1,3 +1,6 @@
+import os
+import json
+
 financial_vocab = [
     # Market Sentiment - Positive (Bullish)
     #"bullish", "rally", "breakout",
@@ -31,9 +34,6 @@ financial_vocab = [
 
 
 # Export financial vocab
-import json
-import os
-
 if __name__ == "__main__":
     os.makedirs("tokenization/vocabulary", exist_ok=True)
     with open("tokenization/vocabulary/financial_vocab.json", "w") as f:
