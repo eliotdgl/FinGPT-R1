@@ -1,13 +1,23 @@
-import argparse
+"""
+    == import_save_HFdata.py ==
+    Loads datasets from Hugging Face and optionally save them locally.
+    
+    Usage:
+        python import_save_HFdata.py --dataset <dataset_name> [--save --path <output_directory>]
+    
+    Arguments:
+        --dataset: str -> Required. Name of the Hugging Face dataset (e.g., "raeidsaqur/nifty").
+        --save: flag -> Optional. If included, saves the dataset locally.
+        --path: str -> Optional. Required if --save is used. Path to save the dataset.
+"""
 import sys
+import argparse
 from datasets import load_dataset
 
-def load_and_save_dataset(dataset_name: str, PATH: str, save:bool = False):    
+def load_and_save_dataset(dataset_name: str, PATH: str, save: bool = False):    
     dataset = load_dataset(dataset_name)
-
     if save:
         dataset.save_to_disk(PATH)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load and optionally save a Hugging Face dataset.")
