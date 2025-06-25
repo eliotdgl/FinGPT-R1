@@ -6,9 +6,15 @@
     - HashT / HashTEC
 
     Each model may use different datasets, tokenizers, and training processes.
-    
-"""
 
+    Usage:
+        python train.py --model <model_names>{['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC', 'all']}
+    
+    Arguments:
+        --model: str -> Required. Name of the model(s) to train.
+        Example:
+            python train.py --model Bert HashTEC DelT
+"""
 import os
 
 os.makedirs("FinGPTR1_pipeline/models", exist_ok=True)
@@ -22,8 +28,10 @@ from FinGPTR1_pipeline.training.training_process import FGPTR1_training
 from BERT.bert_training import bert_train, bertec_train
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 
-def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
-
+def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt) -> None:
+    """
+        Trains the specified model on the appropriate dataset with the correct process.
+    """
     if model in ['HashT', 'HashTEC']:
         PATH = 'FinGPTR1_pipeline/models/HashT'
         Fin_tokenizer = FinGPTR1_Tokenizer(PATH, train=True)
@@ -31,7 +39,7 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
         if model == 'HashT':
             sentiment_model.train(dataset_train_hasht, unfreeze_layers=["lora_"])
             sentiment_model.save(base_path='models/HashT', timestamp_name="1", keep_last=3)
-        else:
+        else:    #HashTEC
             sentiment_model.train(dataset_train_hasht, unfreeze_layers=["lora_", "embeddings", "classifier"])
             sentiment_model.save(base_path='models/HashTEC', timestamp_name="1", keep_last=3)
 
@@ -42,7 +50,7 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
         if model == 'DelT':
             sentiment_model.train(dataset_train_delt, unfreeze_layers = ['lora_'])
             sentiment_model.save(base_path='models/DelT', timestamp_name="1", keep_last=3)
-        else:
+        else:    # DelTEC
             sentiment_model.train(dataset_train_delt, unfreeze_layers = ["lora_", "embeddings", "classifier"])
             sentiment_model.save(base_path='models/DelTEC', timestamp_name="1", keep_last=3)
     
@@ -54,7 +62,7 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
             sentiment_model.load("BERT/models/BertLoRA")
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_"])
             sentiment_model.save(base_path="models/Bert", timestamp_name="1", keep_last=3)
-        else:
+        else:    # BertEC
             bertec_train()
             sentiment_model = Sentiment_Analysis_Model(load_model=True)
             sentiment_model.load("BERT/models/BertLoRAWhole")
@@ -62,8 +70,6 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
             sentiment_model.save(base_path="models/BertEC", timestamp_name="1", keep_last=3)
     else:
         raise ValueError(f'Model {model} not recognized')
-
-    pass
 
 
 if __name__ == "__main__":
@@ -77,7 +83,8 @@ if __name__ == "__main__":
         help="Model(s) to train. Choose from: " + ", ".join(valid_models))
     
     args = parser.parse_args()
-    
+
+    # 'all' argument to train every model at once
     if 'all' in args.model:
         models_to_train = ['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC']
     else:
@@ -90,6 +97,7 @@ if __name__ == "__main__":
     with open('data/local_data/DelT_data/generated_data.pkl', 'rb') as f:
         dataset_train_delt = pickle.load(f)
 
+    # Train each specified model
     for model in models_to_train:
         print(f"\n==== Training {model} ====\n")
         train(model, dataset_train, dataset_train_hasht, dataset_train_delt)
