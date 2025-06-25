@@ -1,3 +1,14 @@
+"""
+    == train.py ==
+    Script to facilitate training of various models:
+    - Bert / BertEC
+    - DelT / DelTEC
+    - HashT / HashTEC
+
+    Each model may use different datasets, tokenizers, and training processes.
+    
+"""
+
 import os
 
 os.makedirs("FinGPTR1_pipeline/models", exist_ok=True)
