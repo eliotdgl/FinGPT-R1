@@ -19,10 +19,10 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
         sentiment_model = Sentiment_Analysis_Model(model_name=PATH)
         if model == 'HashT':
             sentiment_model.train(dataset_train_hasht, unfreeze_layers=["lora_"])
-            sentiment_model.save(base_path='models/HashTLoRA', timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path='models/HashT', timestamp_name="1", keep_last=3)
         else:
             sentiment_model.train(dataset_train_hasht, unfreeze_layers=["lora_", "embeddings", "classifier"])
-            sentiment_model.save(base_path='models/HashTLoRAEC', timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path='models/HashTEC', timestamp_name="1", keep_last=3)
 
     elif model in ['DelT', 'DelTEC']:
         PATH = 'FinGPTR1_pipeline/models/DelT'
@@ -30,10 +30,10 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
         sentiment_model = Sentiment_Analysis_Model(model_name=PATH)
         if model == 'DelT':
             sentiment_model.train(dataset_train_delt, unfreeze_layers = ['lora_'])
-            sentiment_model.save(base_path='models/DelTLoRA', timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path='models/DelT', timestamp_name="1", keep_last=3)
         else:
             sentiment_model.train(dataset_train_delt, unfreeze_layers = ["lora_", "embeddings", "classifier"])
-            sentiment_model.save(base_path='models/DelTLoRAEC', timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path='models/DelTEC', timestamp_name="1", keep_last=3)
     
     elif model in ['Bert', 'BertEC']:
         os.makedirs("BERT/models", exist_ok=True)
@@ -42,13 +42,13 @@ def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt):
             sentiment_model = Sentiment_Analysis_Model(load_model =True)
             sentiment_model.load("BERT/models/BertLoRA")
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_"])
-            sentiment_model.save(base_path="models/BertLoRA", timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path="models/Bert", timestamp_name="1", keep_last=3)
         else:
             bertec_train()
             sentiment_model = Sentiment_Analysis_Model(load_model=True)
             sentiment_model.load("BERT/models/BertLoRAWhole")
             sentiment_model.train(dataset_train, unfreeze_layers=["lora_", "embeddings", "classifier"])
-            sentiment_model.save(base_path="models/BertLoRAEC", timestamp_name="1", keep_last=3)
+            sentiment_model.save(base_path="models/BertEC", timestamp_name="1", keep_last=3)
     else:
         raise ValueError(f'Model {model} not recognized')
 
