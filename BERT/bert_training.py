@@ -1,23 +1,39 @@
+"""
+    == bert_training.py ==
+    
+    Train sentiment classification models using BERT with PEFT LoRA adapters.
+    Two training processes:
+        - bert_train(): Fine-tunes only LoRA adapter layers.
+        - bertec_train(): Fine-tunes LoRA adapters + embedding layer + classification head.
+"""
+
+import os
+import numpy as np
+from datasets import load_dataset
+from sklearn.metrics import accuracy_score
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification,
-    Trainer, TrainingArguments, AutoConfig
+    Trainer, TrainingArguments
 )
-import pandas as pd
-import os
-from peft import get_peft_model, LoraConfig, TaskType, PeftModel, PeftConfig
-from datasets import load_dataset, Dataset
-import numpy as np
-from sklearn.metrics import accuracy_score
+from peft import get_peft_model, LoraConfig, TaskType
 
 
+# === Metric computation ===
 def compute_metrics(pred):
-        labels = pred.label_ids
-        preds = np.argmax(pred.predictions, axis=1)
-        return {"accuracy": accuracy_score(labels, preds)}
+    """
+        Computes accuracy from predictions and true labels.
+    """
+    labels = pred.label_ids
+    preds = np.argmax(pred.predictions, axis=1)
+    return {"accuracy": accuracy_score(labels, preds)}
 
 
-
+# === LoRA Fine-tuning: Only Adapter Layers ===
 def bert_train():
+    """
+        Fine-tunes BERT using LoRA adapters.
+        Only adapter layers are trained.
+    """
     base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
     base_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -49,13 +65,14 @@ def bert_train():
     epochs = 3
     batch_size = 16
 
-    unfreeze_layers = ['lora_']
+    unfreeze_layers = ['lora_']    # Only train LoRA adapters
     lora_model = get_peft_model(base_model, lora_config)
     output_dir = 'BERT/models/BertLoRA_1'
 
+    # Freeze all parameters
     for name, param in lora_model.named_parameters():
         param.requires_grad = False
-            
+    # Unfreeze only LoRA layers
     for name, param in lora_model.named_parameters():
         if any(key in name for key in unfreeze_layers):
             param.requires_grad = True
@@ -90,10 +107,13 @@ def bert_train():
     lora_model.save_pretrained(output_dir)
     base_tokenizer.save_pretrained(output_dir)
 
-    pass
 
-
+# === LoRA + Embedding layer + Classification head ===
 def bertec_train():
+    """
+        Fine-tunes BERT using LoRA adapters, with additional
+        fine-tuning of the embedding layer and classification head.
+    """
     base_model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
     base_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -125,13 +145,14 @@ def bertec_train():
     epochs = 3
     batch_size = 16
     
-    unfreeze_layers = ["lora_", "embeddings", "classifier"]
+    unfreeze_layers = ["lora_", "embeddings", "classifier"]    # Train LoRA adapters + Embedding layer + Classification head
     lora_model = get_peft_model(base_model, lora_config)
     output_dir = 'BERT/models/BertLoRAWhole_1'
 
+    # Freeze all parameters
     for name, param in lora_model.named_parameters():
         param.requires_grad = False
-            
+    # Unfreeze LoRA layers + Embedding layer + Classification head
     for name, param in lora_model.named_parameters():
         if any(key in name for key in unfreeze_layers):
             param.requires_grad = True
@@ -165,5 +186,3 @@ def bertec_train():
     lora_model.base_model.save_pretrained(output_dir)
     lora_model.save_pretrained(output_dir)
     base_tokenizer.save_pretrained(output_dir)
-
-    pass
