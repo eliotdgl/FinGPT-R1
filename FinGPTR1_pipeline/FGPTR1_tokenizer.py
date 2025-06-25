@@ -1,7 +1,13 @@
-import torch
-from torch import nn
+"""
+    == FGPTR1_tokenizer.py ==
+    Defines the FinGPTR1_Tokenizer class for text preprocessing, tokenization, 
+    embedding generation, and inference (sentiment analysis) 
+    using a custom-trained transformer model with financial embeddings.
+"""
 import os
 import json
+import torch
+from torch import nn
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 import sys
@@ -19,17 +25,18 @@ class FinGPTR1_Tokenizer(nn.Module):
         super(FinGPTR1_Tokenizer, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(self.device)
 
+        # Determine if MLP should be used based on PATH
         if 'NoMLP' in PATH:
             self.With_MLP = False
         else:
             self.With_MLP = True
 
+        # Train the model and tokenizer if pretrained files do not exist or if explicitly requested
         if not base_model:
-            base_model = "yiyanghkust/finbert-tone"
+            base_model = "bert-base-uncased"
         if not os.path.exists(PATH + "/custom_embeddings/custom_embeddings.pt") or not os.path.exists(PATH + "/custom_embeddings/custom_embeddings_meta.json") or train:
-            print("\nFinGPTR1 Tokenizer not pretrained, training from default base: yiyanghkust/finbert-tone\n")
+            print("\nFinGPTR1 Tokenizer not pretrained, training from default base: bert-base-uncased\n")
             FGPTR1_training(PATH, base_model, self.With_MLP, self.device)
 
         with open(PATH + "/custom_embeddings/custom_embeddings_meta.json", "r") as f:
@@ -51,8 +58,8 @@ class FinGPTR1_Tokenizer(nn.Module):
         self.custom_embeddings.load_state_dict(torch.load(PATH + "/custom_embeddings/custom_embeddings.pt", map_location=self.device))
         self.custom_embeddings.eval()
 
-        if task.lower() not in ["generation", "sentiment analysis"]:
-            raise ValueError(f"Unknown task: {task}. Try one of these: generation / sentiment analysis")
+        if task.lower() not in ["sentiment analysis"]:
+            raise ValueError(f"Unknown task: {task}. Try one of these: sentiment analysis")
         else:
             self.task = task
         
@@ -60,6 +67,9 @@ class FinGPTR1_Tokenizer(nn.Module):
 
 
     def forward(self, corpus):
+        """
+            Forward method to perform sentiment analysis.
+        """
         if isinstance(corpus, str):
             corpus = [corpus]
         preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
@@ -70,25 +80,19 @@ class FinGPTR1_Tokenizer(nn.Module):
 
         with torch.no_grad():
             embeddings_customed, _ = self.custom_embeddings(input_ids_corpus, corpus_numbers_dict)
-
-        if self.task.lower() == "generation":
-            # For generation tasks, use the model's `generate` method to create text
-            # Pass input_ids to the model and use the output
-            outputs = self.model.generate(inputs_embeds=embeddings_customed, max_length=50, num_return_sequences=1)
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            return generated_text
-
-        elif self.task.lower() == "sentiment analysis":
+        
+        if self.task.lower() == "sentiment analysis":
             # For classification, apply the classifier head
             outputs = self.model(inputs_embeds=embeddings_customed, attention_mask=attention_mask)
             probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
             predicted_class = torch.argmax(probs, dim=-1).item()
             return probs, predicted_class
     
-        pass
 
-
-    def tokenize(self, corpus):
+    def tokenize(self, corpus) -> dict:
+        """
+            Tokenizes and preprocesses the input corpus.
+        """
         if isinstance(corpus, str):
             corpus = [corpus]
         preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
@@ -96,7 +100,10 @@ class FinGPTR1_Tokenizer(nn.Module):
         return self.tokenizer(list(preprocessed_corpus), padding=True, truncation=True, return_tensors="pt")
         
 
-    def get_embeddings(self, corpus):
+    def get_embeddings(self, corpus) -> torch.Tensor:
+        """
+            Generate custom embeddings for the given corpus.
+        """
         if isinstance(corpus, str):
             corpus = [corpus]
         preprocessed_corpus, corpus_numbers_dict = zip(*[preprocess_text(text) for text in corpus])
