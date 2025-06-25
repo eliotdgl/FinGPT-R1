@@ -1,12 +1,22 @@
-import sys
+"""
+    == local_data_loader.py ==
+    Prepares and saves training/test datasets from FinancialPhraseBank-v1.0 and Generated data
+    
+    Note:
+    - Output data is saved under:
+        data/local_data/
+        ├── DelT_data/
+        ├── HashT_data/
+        └── (base path for AllAgree/75/66/50 splits)
+"""
 import os
+import sys
+import pickle
+import pandas as pd
+from sklearn.model_selection import train_test_split
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 from sentiment_analysis.controlled_environment import TextDataGenerator
-from sklearn.model_selection import train_test_split
-import pandas as pd
-import os
-import pickle
 
 os.makedirs("data/local_data", exist_ok=True)
 os.makedirs("data/local_data/DelT_data", exist_ok=True)
@@ -14,7 +24,7 @@ os.makedirs("data/local_data/HashT_data", exist_ok=True)
 
 sentiment_model = Sentiment_Analysis_Model(load_model=True)
 
-def get_train_test_split(data, test_size=0.2, random_state=42):
+def get_train_test_split(data, test_size: float = 0.2, random_state: int = 42):
     if isinstance(data, str):
         df = pd.read_csv(data)
     elif isinstance(data, pd.DataFrame):
@@ -24,10 +34,8 @@ def get_train_test_split(data, test_size=0.2, random_state=42):
 
     return train_test_split(df, test_size=test_size, random_state=random_state)
 
-"""
-Load and preprocessed FinancialPhraseBank-v1.0 all_agree"""
 
-
+"""Load and preprocessed FinancialPhraseBank-v1.0 all_agree"""
 csv_path_all_agree = "data/FinancialPhraseBank-v1.0/Sentences_AllAgree_processed.csv"
 
 df_all_agree=pd.read_csv(csv_path_all_agree)
@@ -38,7 +46,6 @@ train_df_all_agree.to_csv('data/local_data/train_all_agree.csv', index=False)
 test_df_all_agree.to_csv('data/local_data/test_all_agree.csv', index=False)
 
 # Initialize and train the model without saving any CSV
-    
     # DelT
 dataset_train_all_agree = sentiment_model.prepare_dataset('data/local_data/train_all_agree.csv', numlogic_model = True) 
 
@@ -64,9 +71,7 @@ with open(pkl_path_test, 'wb') as f:
     pickle.dump(test_df_all_agree, f)
 
 
-
 """ Load and preprocessed FinancialPhraseBank-v1.0 75 agree"""
-
 csv_path_75_agree = "data/FinancialPhraseBank-v1.0/Sentences_75Agree_processed.csv"
 
 df_75_agree=pd.read_csv(csv_path_75_agree)
@@ -88,8 +93,8 @@ pkl_path_test = os.path.join('data', 'local_data', 'dataset_train_75_agree.pkl')
 with open(pkl_path_test, 'wb') as f:
     pickle.dump(test_df_75_agree, f)
 
-""" Load and preprocessed FinancialPhraseBank-v1.0 66 agree"""
 
+""" Load and preprocessed FinancialPhraseBank-v1.0 66 agree"""
 csv_path_66_agree = "data/FinancialPhraseBank-v1.0/Sentences_66Agree_processed.csv"
 
 df_66_agree=pd.read_csv(csv_path_66_agree)
@@ -111,15 +116,14 @@ pkl_path_test = os.path.join('data', 'local_data', 'dataset_test_66_agree.pkl')
 with open(pkl_path_test, 'wb') as f:
     pickle.dump(test_df_66_agree, f)
 
-""" Load and preprocessed FinancialPhraseBank-v1.0 50 agree"""
 
+""" Load and preprocessed FinancialPhraseBank-v1.0 50 agree"""
 csv_path_50_agree = "data/FinancialPhraseBank-v1.0/Sentences_50Agree_processed.csv"
 
 train_df_50_agree, test_df_50_agree = get_train_test_split(csv_path_50_agree)
 train_df_50_agree.to_csv('data/local_data/train_50_agree.csv', index=False)
 test_df_50_agree.to_csv('data/local_data/test_50_agree.csv', index=False)
 
-# Initialize and train the model without saving any CSV
 dataset_train_50_agree = sentiment_model.prepare_dataset('data/local_data/test_50_agree.csv') 
 
 # Save local data
