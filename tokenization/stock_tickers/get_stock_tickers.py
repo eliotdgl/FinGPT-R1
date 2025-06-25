@@ -1,5 +1,6 @@
+import os
+import json
 import pandas as pd
-
 
 # Main stock tickers
 sp500=pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
@@ -53,9 +54,6 @@ stock_tickers_with_template = {f"<FinGPTICKER_{ticker}>" for ticker in stock_tic
 
 
 # Export stock tickers
-import json
-import os
-
 if __name__ == "__main__":
     os.makedirs("tokenization/vocabulary", exist_ok=True)
     with open("tokenization/vocabulary/stock_tickers.json", "w") as f:
