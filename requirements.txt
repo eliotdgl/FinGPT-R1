@@ -3,11 +3,6 @@ pandas
 numpy
 scikit-learn
 netcal
-#requests
-#requests-html
-#beautifulsoup4
-#bs4
-#lxml
 
 # Text and NLP
 regex
