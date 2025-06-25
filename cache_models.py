@@ -1,3 +1,11 @@
+"""
+  == cache_models.py ==
+  Loads and caches pretrained tokenizers and models from Hugging Face for faster subsequent use.
+
+  Models included:
+  - BERT: bert-base-uncased (base model)
+  - FinBERT: yiyanghkust/finbert-tone (baseline)
+"""
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 model_name = "bert-base-uncased"
