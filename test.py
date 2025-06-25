@@ -181,12 +181,10 @@ if __name__ == "__main__":
         models_to_test = args.model
     
     df_results, dataset_gen, dataset_finp, map_num = get_data()
-    print(models_to_test)
     for model in models_to_test:
         print(f"\n==== Testing {model} ====\n")
         sentiment_model = Sentiment_Analysis_Model(load_model=True)
         path = 'models/' + model
-        print(path)
         sentiment_model.load(base_path=path)
         special_tokens = "DelT" in model
         bert_model = 'bert' in model.lower()
