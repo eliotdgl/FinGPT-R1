@@ -1,3 +1,32 @@
+"""
+    == test.py ==
+    Model Evaluation
+
+    Tests various sentiment classification models including, if trained:
+    - Bert, BertEC
+    - HashT, HashTEC
+    - DelT, DelTEC
+    - FinBERT (optional baseline, no need to train)
+
+    For each model, it evaluates:
+    - Accuracy on FinancialPhraseBank-v1.0 (FinP)
+    - Accuracy on controlled/generated dataset (GenData)
+    - Average confidence
+    - Calibration (ECE)
+    - Reliability diagram
+
+    Results are stored in:
+    - CSV: results/model_comparison.csv
+    - Plots: results/plots/<model>/
+
+    Usage:
+    
+        Example:
+            python test.py --model Bert BertEC --baseline
+            python test.py --model all
+            python test.py --model DelT
+
+"""
 import os
 
 os.makedirs("results", exist_ok=True)
@@ -7,8 +36,8 @@ import argparse
 import numpy as np
 import pandas as pd
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from tqdm import tqdm
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 import matplotlib.pyplot as plt 
 from sklearn.metrics import accuracy_score
