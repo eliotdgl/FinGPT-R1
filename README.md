@@ -1,37 +1,38 @@
-**:brain:** Enhancing LLMs for Financial Sentiment Analysis
+**:brain: Enhancing Large Language Models for Financial Sentiment Analysis**
+A framework for fine-tuning and evaluating transformer-based models on domain-specific financial sentiment tasks, with improved handling of numerical.
 
-–––––––––––––––––––––––––
+–––
 
 **:file_folder: Repository Structure**
 ```
 FinGPT‑R1/
 ├── BERT/
-│   └── bert_training.py 
+│   └── bert_training.py         # BERT-specific training
 ├── data/
 │   └── FinancialPhraseBank-v1.0/     
-│   └── financial_news/          #
-│   └── import_save_HFdata.py    #
-│   └── local_data_loader.py     #
+│   └── financial_news/          
+│   └── import_save_HFdata.py    # Import (and save) Hugging Face datasets
+│   └── local_data_loader.py     # Custom dataset loader
 ├── FinGPTR1_pipeline/
-│   └── training/                #
-│   └── custom_embeddings.py
-│   └── delt_training.py         #
-│   └── FGPTR1_tokenizer.py
+│   └── training/                # LoRA and other training processes
+│   └── custom_embeddings.py     # Embedding logic (for new special tokens)
+│   └── delt_training.py         # Delimiters (DelT) method training
+│   └── FGPTR1_tokenizer.py      # Tokenizer setup and customization
 ├── sentiment_analysis/
-│   └── controlled_environment.py  #
-│   └── sentiment_model_class.py   #
+│   └── controlled_environment.py  # Generated data
+│   └── sentiment_model_class.py   # Wrapper class
 ├── tokenization/
 │   └── financial_vocab/
 │   └── numericals/
 │   └── stock_tickers/
 │   └── vocabulary/
-│   └── preprocess_text.py      #
-├── cache_models.py             
-├── train.py                    #
-├── test.py                     #
-├── models/                     # Trained models (not saved in the Github repository
+│   └── preprocess_text.py      # Token preprocessing and cleaning
+├── cache_models.py             # Pre-load HF models for offline use
+├── train.py                    # CLI entry for training
+├── test.py                     # CLI entry for testing
+├── models/                     # Trained models (not saved in the Github repository)
 ├── results/                   
-└── requirements.txt/            
+└── requirements.txt        
 ```
 
 **:rocket: Getting Started**
