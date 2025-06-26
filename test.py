@@ -2,7 +2,7 @@
     == test.py ==
     Model Evaluation
 
-    Tests various sentiment classification models including, if trained:
+    Tests various sentiment classification models including (if trained):
     - Bert, BertEC
     - HashT, HashTEC
     - DelT, DelTEC
@@ -20,12 +20,15 @@
     - Plots: results/plots/<model>/
 
     Usage:
+        python test.py --model <model_names>{['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC', 'all']} [--baseline]
     
+    Arguments:
+        --model: str -> Required. Name of the model(s) to test.
+        --baseline: flag -> Optional. Include FinBERT baseline.
         Example:
-            python test.py --model Bert BertEC --baseline
-            python test.py --model all
-            python test.py --model DelT
-
+            python test.py --model BertEC --baseline
+            python test.py --model Bert HashTEC DelT
+            python test.py --model all --baseline
 """
 import os
 
@@ -49,7 +52,12 @@ from sentiment_analysis.controlled_environment import TextDataGenerator
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
 
 
-def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, model_name, df_results):
+def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, model_name, df_results) -> None:
+    """
+        Evaluates a model's predictions on both datasets:
+        - Accuracy, average confidence, and ECE
+        - Reliability diagrams
+    """
     # Accuracy
     accuracy_finp = accuracy_score(correct_labels_finp, pred_labels_finp)
     accuracy_gen = accuracy_score(correct_labels_gen, pred_labels_gen)
@@ -86,10 +94,13 @@ def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_
     plt.close('all')
 
     df_results.loc[model_name] = [accuracy_finp, accuracy_gen, avg_conf_finp, avg_conf_gen, ece_score_finp, ece_score_gen]
-    
-    pass
+
 
 def get_data():
+    """
+        Loads or initializes the results DataFrame.
+        Loads test dataset (FinP) and Generate controlled (GenData) data.
+    """
     if os.path.exists("results/model_comparison.csv"):
         df_results = pd.read_csv("results/model_comparison.csv")
     else:
@@ -109,8 +120,11 @@ def get_data():
     return df_results, dataset_gen, dataset_finp, map_num
 
 
-# Baseline
-def finbert_test(df_results, dataset_gen, dataset_finp, map_num):
+# Baseline (FinBERT)
+def finbert_test(df_results, dataset_gen, dataset_finp, map_num) -> None:
+    """
+        Runs inference and evaluation on FinBERT model on both datasets.
+    """
     model_name = "yiyanghkust/finbert-tone"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -143,10 +157,13 @@ def finbert_test(df_results, dataset_gen, dataset_finp, map_num):
 
     evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, "FinBERT", df_results)
 
-    pass
 
-
-def test(model: str, df_results, dataset_gen, dataset_finp, map_num, sentiment_model, bert_model = False, special_tokens=False):
+def test(model: str, df_results, dataset_gen, dataset_finp, map_num, sentiment_model, bert_model: bool = False, special_tokens: bool = False) -> None:
+    """
+        Evaluates a specified sentiment model on both FinP and GenData datasets.
+        Computes accuracy, average confidence and ECE.
+        Saves reliability diagrams and updates df_results.
+    """
     pred_labels_finp = []
     probs_list_finp = []
     correct_labels_finp = []
@@ -183,8 +200,6 @@ def test(model: str, df_results, dataset_gen, dataset_finp, map_num, sentiment_m
 
     evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, model, df_results)
 
-    pass
-
 
 if __name__ == "__main__":
     try:
@@ -204,6 +219,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
+    # If 'all' argument to test all, already trained, models at once
     if 'all' in args.model:
         models_to_test = trained_models
     else:
