@@ -1,7 +1,7 @@
-**:brain: Enhancing Large Language Models for Financial Sentiment Analysis**
+**:brain: Enhancing Large Language Models for Financial Sentiment Analysis**  
 A framework for fine-tuning and evaluating transformer-based models on domain-specific financial sentiment tasks, with improved handling of numerical.
 
-–––
+---
 
 **:file_folder: Repository Structure**
 ```
