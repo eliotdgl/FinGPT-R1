@@ -1,0 +1,82 @@
+import json
+
+# Load numericals_vocab from the JSON file
+with open("tokenization/vocabulary/numericals_vocab.json", "r") as f:
+
+    numericals_vocab = json.load(f)
+
+def match_number_to_vocab(input_str, numericals_vocab):
+    """""
+    Matches a number string to a pattern in the numericals_vocab.
+    The function checks for various formats including currency symbols.
+    """""
+    currencies = ["$", "€", "£", "¥"]
+    is_negative = False
+    if input_str.startswith('-'):
+        is_negative = True
+        input_str = input_str[1:]
+    
+    currency = None
+    for c in currencies:
+        if input_str.startswith(c):
+            currency = c
+            input_str = input_str[len(c):]
+            break
+    
+    is_percentage = False
+    if input_str.endswith('%'):
+        if currency is not None:
+            return None
+        is_percentage = True
+        input_str = input_str[:-1]
+    
+    order_suffix = ''
+    if input_str:
+        last_char = input_str[-1]
+        if last_char in ['K', 'M', 'B', 'T']:
+            order_suffix = last_char
+            input_str = input_str[:-1]
+    
+    if '.' in input_str:
+        parts = input_str.split('.')
+        if len(parts) != 2:
+            return None
+        integer_part, decimal_part = parts
+        if len(decimal_part) != 1:
+            return None
+    else:
+        integer_part = input_str
+        decimal_part = None
+    
+    if not integer_part:
+        return None
+    
+    if not integer_part[0].isdigit() or integer_part[0] == '0':
+        return None
+    first_digit = integer_part[0]
+    remaining_length = len(integer_part) - 1
+    
+    if decimal_part is not None:
+        if remaining_length < 0 or remaining_length > 5:
+            return None
+        int_pattern = first_digit + ('#' * remaining_length) if remaining_length > 0 else first_digit
+        number_pattern = f"{int_pattern}.#"
+    else:
+        if remaining_length < 1 or remaining_length > 4:
+            return None
+        number_pattern = first_digit + ('#' * remaining_length)
+    
+    number_pattern += order_suffix
+    
+    constructed = []
+    if is_negative:
+        constructed.append('-')
+    if currency:
+        constructed.append(currency)
+    constructed.append(number_pattern)
+    if is_percentage:
+        constructed.append('%')
+    
+    constructed_pattern = ''.join(constructed)
+    
+    return constructed_pattern if constructed_pattern in numericals_vocab else None

@@ -1,0 +1,25 @@
+# Core dependencies
+pandas
+numpy
+scikit-learn
+netcal
+
+# Text and NLP
+regex
+transformers==4.51.3    #==4.50.3
+sentencepiece
+torch
+
+# Data saving/loading
+tqdm
+jsonlines
+datasets
+
+# APIs and web data
+#yfinance
+#yahoo_fin
+huggingface_hub
+
+# RL environment
+#gym
+peft
