@@ -13,7 +13,9 @@
     Arguments:
         --model: str -> Required. Name of the model(s) to train.
         Example:
+            python train.py --model BertEC
             python train.py --model Bert HashTEC DelT
+            python train.py --model all
 """
 import os
 
