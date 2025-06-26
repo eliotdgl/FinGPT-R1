@@ -7,8 +7,13 @@
 import torch
 from torch import nn
 
-# Define a custom embedding module combining original model's embeddings and personalized embeddings
+
 class CustomEmbeddings(nn.Module):
+
+    """ 
+        Define a custom embedding module combining original model's embeddings and personalized embeddings
+    """
+
     def __init__(self, original_embeddings: torch, old_vocab_len: int,
                  len_vocab_added_stocks_fin: int, new_vocab_len: int = None,
                  WithMLP: bool = True, device = None):

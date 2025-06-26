@@ -43,6 +43,10 @@ from tokenization.preprocess_text import preprocess_text
 
 class Sentiment_Analysis_Model:
     def __init__(self, model_name = None, label_map = None, load_model: bool = False, num_label: int = 3):
+        """
+            Initalize an instance of the Sentiment_Analysis_Model class, either creates a new model 
+            or loads an existing one.
+        """
         self.label_map = label_map or {-1: 2, 0: 0, 1: 1}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
         self.label_names = ["neutral", "positive", "negative"]

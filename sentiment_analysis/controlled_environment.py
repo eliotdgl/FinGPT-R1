@@ -1,10 +1,10 @@
 """
     == controlled_environment.py ==
-    Synthetic Financial Sentiment Data Generator (AllAgree case)
+    Synthetic Financial Sentiment Data Generator
     
     Defines the TextDataGenerator class for generating synthetic financial sentiment-labeled text data.
-    It mimics sentence styles from the FinancialPhraseBank-v1.0 "AllAgree" dataset,
-    giving control over structure, label balance, and reproducibility.
+    Each generated sentence is labeled as positive, negative, or neutral based on predefined templates 
+    and on the randomly generated numbers.
 """
 import random
 import numpy as np
@@ -14,6 +14,9 @@ import torch.optim as optim
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 class TextDataGenerator:
+    """
+        A class to generate synthetic financial sentiment-labeled text data.
+    """
     def __init__(self, n_classes: int = 3, samples_per_episode: int = 1000, number_of_episode: int = 1):
         self.n_classes = n_classes
         self.samples_per_episode = samples_per_episode
