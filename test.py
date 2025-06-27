@@ -102,7 +102,7 @@ def get_data():
         Loads test dataset (FinP) and Generate controlled (GenData) data.
     """
     if os.path.exists("results/model_comparison.csv"):
-        df_results = pd.read_csv("results/model_comparison.csv")
+        df_results = pd.read_csv("results/model_comparison.csv", index_col=0)
     else:
         df_results = pd.DataFrame(columns=[
             "Accuracy on FinP", "Accuracy on GenData",
