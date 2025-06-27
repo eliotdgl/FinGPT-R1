@@ -7,7 +7,6 @@ netcal
 # Text and NLP
 regex
 transformers==4.51.3    #==4.50.3
-sentencepiece
 torch
 
 # Data saving/loading
@@ -23,3 +22,7 @@ huggingface_hub
 # RL environment
 #gym
 peft
+
+
+# May not work with pip install (use conda install)
+sentencepiece
