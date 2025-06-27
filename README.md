@@ -59,6 +59,13 @@ If you are using a cluster–where internet access may be limited or unavailable
 
 ---
 
+**:arrows_counterclockwise: Import Data**  
+```
+python data/local_data_loader.py
+```
+
+---
+
 **:bulb: Train**  
 Run the full training for all or specific models via CLI:
 ```
