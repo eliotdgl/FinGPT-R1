@@ -93,7 +93,7 @@ class Sentiment_Analysis_Model:
             self.model = None
 
         
-    def prepare_dataset(self, raw_input, preprocess: bool = True, numlogic_model: bool = False) -> datasets.Dataset:
+    def prepare_dataset(self, raw_input, preprocess: bool = True, numlogic_model: bool = False):
         """
             Prepares a HuggingFace dataset from raw input.
         """
