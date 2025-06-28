@@ -39,7 +39,7 @@ FinGPT‑R1/
 
 **:rocket: Getting Started**
 ```
-git clone -b Tokenization-Branch https://github.com/eliotdgl/FinGPT‑R1.git
+git clone https://github.com/eliotdgl/FinGPT-R1.git
 cd FinGPT‑R1
 pip install -r requirements.txt
 ```
