@@ -22,7 +22,3 @@ huggingface_hub
 # RL environment
 #gym
 peft
-
-
-# May not work with pip install (works with conda install)
-sentencepiece
