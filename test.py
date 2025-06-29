@@ -101,14 +101,11 @@ def get_data():
         Loads or initializes the results DataFrame.
         Loads test dataset (FinP) and Generate controlled (GenData) data.
     """
-    if os.path.exists("results/model_comparison.csv"):
-        df_results = pd.read_csv("results/model_comparison.csv", index_col=0)
-    else:
-        df_results = pd.DataFrame(columns=[
-            "Accuracy on FinP", "Accuracy on GenData",
-            "Avg Confidence on FinP", "Avg Confidence on Gen",
-            "ECE on FinP", "ECE on Gen"
-        ])
+    df_results = pd.DataFrame(columns=[
+        "Accuracy on FinP", "Accuracy on GenData",
+        "Avg Confidence on FinP", "Avg Confidence on Gen",
+        "ECE on FinP", "ECE on Gen"
+    ])
 
     generator = TextDataGenerator()
     dataset_gen = generator.generate_batch()
