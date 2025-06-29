@@ -66,7 +66,7 @@ python data/local_data_loader.py
 
 ---
 
-**:bulb: Train**  
+**:bulb: Train (requires GPU)**  
 Run the full training for all or specific models via CLI:
 ```
 python train.py --model all    # train all models
