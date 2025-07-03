@@ -3,7 +3,7 @@ A framework for fine-tuning and evaluating transformer-based models on domain-sp
 
 ---
 
-**:file_folder: Repository Structure**
+## Repository Structure**
 ```
 FinGPT‑R1/
 ├── BERT/
