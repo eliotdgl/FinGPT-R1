@@ -1,9 +1,8 @@
 **:brain: Enhancing Large Language Models for Financial Sentiment Analysis**  
 A framework for fine-tuning and evaluating transformer-based models on domain-specific financial sentiment tasks, with improved handling of numerical.
 
----
-
 ## Repository Structure
+
 ```
 FinGPT‑R1/
 ├── BERT/
@@ -35,8 +34,8 @@ FinGPT‑R1/
 └── requirements.txt        
 ```
 
-
 ## Getting Started
+
 ```
 git clone https://github.com/eliotdgl/FinGPT-R1.git
 cd FinGPT-R1/
@@ -44,8 +43,8 @@ pip install -r requirements.txt
 ```
 If you are using a cluster–where internet access may be limited or unavailable–ensure you have preloaded the `bert-base-uncased`–and `yiyanghkust/finbert-tone` for baseline results–models. You can do this by running `python cache_models.py` locally on a machine with internet access.  
 
-
 ## Available models
+
 ```
 - Bert: Standard BERT with LoRA fine-tuning
 - BertEC: Standard BERT with LoRA, plus fine-tuning of the embedding layer and classification head
@@ -55,14 +54,14 @@ If you are using a cluster–where internet access may be limited or unavailable
 - HashTEC: HashT with additional fine-tuning of the embedding layer and classification head
 ```
 
-
 ## Import Data
+
 ```
 python data/local_data_loader.py
 ```
 
-
 ## Train (requires GPU)
+
 Run the full training for all or specific models via CLI:
 ```
 python train.py --model all    # train all models
@@ -70,8 +69,8 @@ python train.py --model Bert BertEC ...
 ```
 Trained models are saved under `models/`.
 
-
 ## Evaluate
+
 ```
 python test.py --model all    # evaluate all trained models
 python test.py --model Bert BertEC ...
