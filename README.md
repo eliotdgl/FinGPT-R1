@@ -56,14 +56,14 @@ If you are using a cluster–where internet access may be limited or unavailable
 
 ## Import Data
 
-```
+```bash
 python data/local_data_loader.py
 ```
 
 ## Train (requires GPU)
 
 Run the full training for all or specific models via CLI:
-```
+```bash
 python train.py --model all    # train all models
 python train.py --model Bert BertEC ...
 ```
@@ -71,7 +71,7 @@ Trained models are saved under `models/`.
 
 ## Evaluate
 
-```
+```bash
 python test.py --model all    # evaluate all trained models
 python test.py --model Bert BertEC ...
 python test.py --model ... --baseline    # include FinBERT baseline scores
