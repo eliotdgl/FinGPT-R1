@@ -36,7 +36,7 @@ FinGPT‑R1/
 
 ## Getting Started
 
-```
+```bash
 git clone https://github.com/eliotdgl/FinGPT-R1.git
 cd FinGPT-R1/
 pip install -r requirements.txt
