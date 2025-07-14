@@ -172,7 +172,7 @@ class Sentiment_Analysis_Model:
 
     
     def train(self, input_dataset, output_dir: str = "sentiment_analysis/logs/sft-sentiment-model", unfreeze_layers: list = ['lora_'],
-              epochs: int = 3, batch_size: int = 16) -> None:
+              epochs: int = 3, batch_size: int = 32) -> None:
         """
             Trains the sentiment analysis model.
         """

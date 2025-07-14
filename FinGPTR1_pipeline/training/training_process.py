@@ -5,11 +5,11 @@
     extended with custom domain-specific tokens (e.g., stock tickers, numericals).
     Supports training with gradual unfreezing and optional MLP.
 """
-import torch
 import os
 import json
+import torch
+import pandas as pd
 from tqdm import tqdm
-from datasets import load_dataset
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
@@ -164,8 +164,8 @@ def FGPTR1_training(PATH: str,
 
     Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, len_vocab_added_stocks_fin, new_vocab_len, With_MLP, device).to(device)
 
-    data = load_dataset('csv', data_files='data/local_data/train_all_agree.csv')
-    train_news, val_news, train_labels, val_labels = train_test_split(data["train"]["Sentence"], data["train"]["Label"], test_size=0.1)
+    data = pd.read_csv('data/local_data/train_all_agree.csv')
+    train_news, val_news, train_labels, val_labels = train_test_split(data["Sentence"], data["Label"], test_size=0.1)
     label_map = {"neutral": 0, "positive": 1, "negative": 2}
     train_labels = [label_map[label] for label in train_labels]
     val_labels = [label_map[label] for label in val_labels]
