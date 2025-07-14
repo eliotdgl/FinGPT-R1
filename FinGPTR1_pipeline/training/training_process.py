@@ -165,7 +165,7 @@ def FGPTR1_training(PATH: str,
     Custom_Embeddings = CustomEmbeddings(embedding_layer, old_vocab_len, len_vocab_added_stocks_fin, new_vocab_len, With_MLP, device).to(device)
 
     data = pd.read_csv('data/local_data/train_all_agree.csv')
-    train_news, val_news, train_labels, val_labels = train_test_split(data["Sentence"], data["Label"], test_size=0.1)
+    train_news, val_news, train_labels, val_labels = train_test_split(data["Sentence"], data["Label"], test_size = 0.1, random_state = 42)
     label_map = {"neutral": 0, "positive": 1, "negative": 2}
     train_labels = [label_map[label] for label in train_labels]
     val_labels = [label_map[label] for label in val_labels]

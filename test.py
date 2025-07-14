@@ -39,6 +39,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import torch
+import random
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
@@ -50,6 +51,13 @@ from netcal.presentation import ReliabilityDiagram
 from tokenization.preprocess_text import preprocess_text
 from sentiment_analysis.controlled_environment import TextDataGenerator
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def evaluate_model(pred_labels_finp, correct_labels_finp, probs_list_finp, pred_labels_gen, correct_labels_gen, probs_list_gen, model_name, df_results) -> None:
@@ -222,6 +230,8 @@ if __name__ == "__main__":
     else:
         models_to_test = args.model
     
+    set_seed()
+
     df_results, dataset_gen, dataset_finp, map_num = get_data()
     for model in models_to_test:
         print(f"\n==== Testing {model} ====\n")

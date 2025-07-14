@@ -23,12 +23,23 @@ os.makedirs("FinGPTR1_pipeline/models", exist_ok=True)
 os.makedirs("models", exist_ok=True)
 
 import sys
+import numpy as np
+import torch
 import pickle
 import argparse
+import random
 from FinGPTR1_pipeline.FGPTR1_tokenizer import FinGPTR1_Tokenizer
 from FinGPTR1_pipeline.training.training_process import FGPTR1_training
 from BERT.bert_training import bert_train, bertec_train
 from sentiment_analysis.sentiment_model_class import Sentiment_Analysis_Model
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
 
 def train(model: str, dataset_train, dataset_train_hasht, dataset_train_delt) -> None:
     """
@@ -91,6 +102,8 @@ if __name__ == "__main__":
         models_to_train = ['Bert', 'BertEC', 'HashT', 'HashTEC', 'DelT', 'DelTEC']
     else:
         models_to_train = args.model
+
+    set_seed()
 
     with open('data/local_data/generated_data.pkl', 'rb') as f:
         dataset_train = pickle.load(f)
