@@ -78,7 +78,7 @@ python test.py --model ... --baseline    # include FinBERT baseline scores
 ```
 Results are saved under `results/`; including accuracy, calibration and reliability plots under `results/plots/`.
 
-## Hyperparameters (LoRA)
+## Hyperparameters (LoRA Fine-Tuning)
 
 | Parameter       | Value         |
 |----------------|---------------|
@@ -86,5 +86,4 @@ Results are saved under `results/`; including accuracy, calibration and reliabil
 | Batch Size     | 32            |
 | Learning Rate  | 5e-5          |
 | Optimizer      | AdamW         |
-| Max Seq Length | 128           |
-| Scheduler      | linear warmup |
+| Scheduler      | linear        |
