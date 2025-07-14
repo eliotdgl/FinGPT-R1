@@ -77,3 +77,13 @@ python test.py --model Bert BertEC ...
 python test.py --model ... --baseline    # include FinBERT baseline scores
 ```
 Results are saved under `results/`; including accuracy, calibration and reliability plots under `results/plots/`.
+
+## Hyperparameters (LoRA Fine-Tuning)
+
+| Parameter       | Value         |
+|----------------|---------------|
+| Epochs         | 3             |
+| Batch Size     | 32            |
+| Learning Rate  | 5e-5          |
+| Optimizer      | AdamW         |
+| Scheduler      | linear        |
