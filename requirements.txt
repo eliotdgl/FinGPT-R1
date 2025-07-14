@@ -1,6 +1,6 @@
 # Core dependencies
 pandas
-numpy
+numpy>=1.0,<2.0
 scikit-learn
 netcal
 
