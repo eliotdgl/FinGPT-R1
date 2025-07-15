@@ -78,7 +78,7 @@ python test.py --model ... --baseline    # include FinBERT baseline scores
 ```
 Results are saved under `results/`; including accuracy, calibration and reliability plots under `results/plots/`.
 
-## Hyperparameters (LoRA Fine-Tuning)
+# Hyperparameters (LoRA Fine-Tuning)
 
 | Parameter       | Value         |
 |----------------|---------------|
