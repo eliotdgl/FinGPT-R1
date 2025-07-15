@@ -41,7 +41,7 @@ git clone https://github.com/eliotdgl/FinGPT-R1.git
 cd FinGPT-R1/
 pip install -r requirements.txt
 ```
-If you are using a cluster–where internet access may be limited or unavailable–ensure you have preloaded the `bert-base-uncased` and `yiyanghkust/finbert-tone` for baseline results–models. You can do this by running `python cache_models.py` locally on a machine with internet access.  
+If you are using a cluster–where internet access may be limited or unavailable–ensure you have preloaded the `bert-base-uncased`, and `yiyanghkust/finbert-tone` for baseline results–models. You can do this by running `python cache_models.py` locally on a machine with internet access.  
 
 ## Available models
 
