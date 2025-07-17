@@ -87,3 +87,4 @@ Results are saved under `results/`; including accuracy, calibration and reliabil
 | Learning Rate  | 5e-5          |
 | Optimizer      | AdamW         |
 | Scheduler      | linear        |
+| Bottleneck dim.      | 8        |
