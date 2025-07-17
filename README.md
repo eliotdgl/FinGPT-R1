@@ -85,6 +85,6 @@ Results are saved under `results/`; including accuracy, calibration and reliabil
 | Epochs         | 3             |
 | Batch Size     | 32            |
 | Learning Rate  | 5e-5          |
+| Bottleneck dim.      | 8        |
 | Optimizer      | AdamW         |
 | Scheduler      | linear        |
-| Bottleneck dim.      | 8        |
